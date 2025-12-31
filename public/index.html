@@ -1,0 +1,2151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini WP-Agent - Asistente Conversacional WordPress</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* 🎨 BARRA LATERAL IZQUIERDA */
+        .sidebar {
+            width: 280px;
+            background-color: #2d2d2d;
+            border-right: 1px solid #404040;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #404040;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #27ca3f;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .connected-site {
+            background-color: #1a1a1a;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+
+        .site-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #e0e0e0;
+            margin-bottom: 4px;
+        }
+
+        .site-url {
+            font-size: 11px;
+            color: #888;
+            word-break: break-all;
+        }
+
+        .site-status {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            margin-top: 6px;
+        }
+
+        .site-status.connected {
+            background-color: #27ca3f;
+            color: #000;
+        }
+
+        .site-status.disconnected {
+            background-color: #ff5f56;
+            color: #fff;
+        }
+
+        .sidebar-actions {
+            padding: 20px;
+            flex: 1;
+        }
+
+        .action-group {
+            margin-bottom: 24px;
+        }
+
+        .action-group-title {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .action-button {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 12px;
+            background: none;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-family: inherit;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 8px;
+        }
+
+        .action-button:hover {
+            background-color: #404040;
+            border-color: #555;
+            transform: translateX(4px);
+        }
+
+        .action-button:active {
+            transform: translateX(2px);
+        }
+
+        .action-icon {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .api-status {
+            background-color: #1a1a1a;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+
+        .api-status-title {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 6px;
+        }
+
+        .api-status-value {
+            font-size: 11px;
+            color: #27ca3f;
+        }
+
+        .api-status-value.free {
+            color: #ffbd2e;
+        }
+
+        /* 🎨 ÁREA PRINCIPAL DEL CHAT */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #1a1a1a;
+        }
+
+        .chat-header {
+            background-color: #2d2d2d;
+            padding: 16px 24px;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #e0e0e0;
+        }
+
+        .active-site-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #1a1a1a;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-left: auto;
+            position: relative;
+        }
+
+        .site-indicator-label {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .site-indicator-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #27ca3f;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .site-selector-btn {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .site-selector-btn:hover {
+            background-color: #404040;
+            color: #e0e0e0;
+        }
+
+        .site-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: #2d2d2d;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            min-width: 250px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .site-dropdown.show {
+            display: block !important;
+            animation: dropdownFadeIn 0.2s ease;
+        }
+
+        @keyframes dropdownFadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(-8px);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0);
+            }
+        }
+
+        .site-dropdown-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #404040;
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        .site-dropdown-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border-bottom: 1px solid #333;
+        }
+
+        .site-dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .site-dropdown-item:hover {
+            background-color: #404040;
+        }
+
+        .site-dropdown-item.active {
+            background-color: rgba(39, 202, 63, 0.1);
+            border-left: 3px solid #27ca3f;
+        }
+
+        .site-dropdown-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #e0e0e0;
+            margin-bottom: 2px;
+        }
+
+        .site-dropdown-url {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        .site-dropdown-status {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .site-dropdown-status.connected {
+            background-color: rgba(39, 202, 63, 0.2);
+            color: #27ca3f;
+        }
+
+        .site-dropdown-status.error {
+            background-color: rgba(255, 95, 86, 0.2);
+            color: #ff5f56;
+        }
+
+        .site-dropdown-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .site-dropdown-action {
+            background: none;
+            border: 1px solid #404040;
+            color: #888;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .site-dropdown-action:hover {
+            border-color: #27ca3f;
+            color: #27ca3f;
+        }
+
+        .site-dropdown-action.delete:hover {
+            border-color: #ff5f56;
+            color: #ff5f56;
+        }
+
+        .site-dropdown-footer {
+            padding: 12px 16px;
+            border-top: 1px solid #404040;
+            text-align: center;
+        }
+
+        .add-site-btn {
+            background-color: #27ca3f;
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .add-site-btn:hover {
+            background-color: #22b83a;
+            transform: translateY(-1px);
+        }
+
+        /* 🎨 ESTILOS PARA SITIOS EN SIDEBAR */
+        .saved-site-item {
+            background-color: #1a1a1a;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .saved-site-item:hover {
+            background-color: #333;
+            transform: translateX(4px);
+        }
+
+        .saved-site-item.active {
+            border-color: #27ca3f;
+            background-color: rgba(39, 202, 63, 0.1);
+        }
+
+        .saved-site-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #e0e0e0;
+            margin-bottom: 4px;
+        }
+
+        .saved-site-url {
+            font-size: 10px;
+            color: #888;
+            margin-bottom: 6px;
+            word-break: break-all;
+        }
+
+        .saved-site-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .site-action-btn {
+            background: none;
+            border: 1px solid #404040;
+            color: #888;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .site-action-btn:hover {
+            border-color: #27ca3f;
+            color: #27ca3f;
+        }
+
+        .site-action-btn.delete:hover {
+            border-color: #ff5f56;
+            color: #ff5f56;
+        }
+
+        .site-action-btn.active-indicator {
+            background-color: #27ca3f;
+            color: #000;
+            border-color: #27ca3f;
+            font-weight: 500;
+        }
+
+        .chat-subtitle {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .mobile-menu-toggle:hover {
+            background-color: #404040;
+        }
+
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            background-color: #1a1a1a;
+        }
+
+        .input-area {
+            padding: 20px 24px;
+            background-color: #2d2d2d;
+            border-top: 1px solid #404040;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .message-input {
+            flex: 1;
+            background-color: #1a1a1a;
+            border: 1px solid #404040;
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #e0e0e0;
+            font-family: inherit;
+            font-size: 14px;
+            resize: none;
+            min-height: 44px;
+            max-height: 120px;
+            transition: border-color 0.2s ease;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #27ca3f;
+        }
+
+        .message-input::placeholder {
+            color: #666;
+        }
+
+        .send-button {
+            background-color: #27ca3f;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #000;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 80px;
+        }
+
+        .send-button:hover {
+            background-color: #22b83a;
+            transform: translateY(-1px);
+        }
+
+        .send-button:active {
+            transform: translateY(0);
+        }
+
+        .send-button:disabled {
+            background-color: #404040;
+            color: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 🎨 MENSAJES DEL CHAT */
+        .message {
+            margin-bottom: 24px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(10px);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0);
+            }
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .message-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .message-avatar.user {
+            background-color: #27ca3f;
+            color: #000;
+        }
+
+        .message-avatar.assistant {
+            background-color: #ffbd2e;
+            color: #000;
+        }
+
+        .message-author {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #666;
+            margin-left: auto;
+        }
+
+        .message-content {
+            background-color: #2d2d2d;
+            border: 1px solid #404040;
+            border-radius: 12px;
+            padding: 16px;
+            margin-left: 32px;
+            position: relative;
+        }
+
+        .message-content::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 12px;
+            width: 0;
+            height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-right: 8px solid #404040;
+        }
+
+        .message-content::after {
+            content: '';
+            position: absolute;
+            left: -7px;
+            top: 12px;
+            width: 0;
+            height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-right: 8px solid #2d2d2d;
+        }
+
+        .message-text {
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .code-block {
+            background-color: #1a1a1a;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+        }
+
+        .command-output {
+            background-color: #1a1a1a;
+            border-left: 4px solid #27ca3f;
+            padding: 12px;
+            margin: 12px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .error-output {
+            background-color: #2d1a1a;
+            border-left: 4px solid #ff5f56;
+            padding: 12px;
+            margin: 12px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* 🎨 MODAL DE CONFIGURACIÓN */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: #2d2d2d;
+            border: 1px solid #404040;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from { 
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #e0e0e0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: #e0e0e0;
+            background-color: #404040;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #e0e0e0;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            background-color: #1a1a1a;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 12px;
+            color: #e0e0e0;
+            font-family: inherit;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #27ca3f;
+        }
+
+        .form-input::placeholder {
+            color: #666;
+        }
+
+        .form-description {
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 32px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: #27ca3f;
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            background-color: #22b83a;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: #404040;
+            color: #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background-color: #555;
+        }
+
+        .config-status {
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .config-status.success {
+            background-color: rgba(39, 202, 63, 0.1);
+            border: 1px solid #27ca3f;
+            color: #27ca3f;
+        }
+
+        .config-status.error {
+            background-color: rgba(255, 95, 86, 0.1);
+            border: 1px solid #ff5f56;
+            color: #ff5f56;
+        }
+
+        /* 🎨 RESPONSIVE DESIGN */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                z-index: 999;
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                width: 100%;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .chat-area {
+                padding: 16px;
+            }
+
+            .input-area {
+                padding: 16px;
+            }
+
+            .modal-content {
+                margin: 16px;
+                padding: 24px;
+            }
+
+            /* 🆕 Responsive para indicador de sitio activo */
+            .active-site-indicator {
+                max-width: 200px;
+            }
+
+            .site-indicator-name {
+                max-width: 100px;
+            }
+
+            .site-dropdown {
+                right: -50px;
+                min-width: 280px;
+            }
+
+            .chat-header {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .chat-title {
+                font-size: 14px;
+            }
+
+            .chat-subtitle {
+                display: none;
+            }
+        }
+
+        /* 🎨 SCROLLBAR PERSONALIZADO */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #404040;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* 🎨 LOADING STATES */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #888;
+            font-size: 13px;
+            margin: 16px 0;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background-color: #888;
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typingBounce {
+            0%, 80%, 100% { 
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% { 
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 🎨 BARRA LATERAL IZQUIERDA -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">Gemini WP-Agent</div>
+                <div class="sidebar-subtitle">Asistente Conversacional</div>
+                
+                <div class="connected-site" id="connectedSiteInfo" style="display: none;">
+                    <div class="site-name" id="currentSiteName">Sin sitio conectado</div>
+                    <div class="site-url" id="currentSiteUrl"></div>
+                    <span class="site-status disconnected" id="currentSiteStatus">Desconectado</span>
+                </div>
+
+                <div class="api-status">
+                    <div class="api-status-title">Estado API</div>
+                    <div class="api-status-value free" id="apiStatusValue">Consultas gratuitas (50/hora)</div>
+                </div>
+            </div>
+
+            <div class="sidebar-actions">
+                <div class="action-group">
+                    <div class="action-group-title">Configuración</div>
+                    <button class="action-button" id="globalApiKeyButton">
+                        <span class="action-icon">🔑</span>
+                        <span>API Key Global</span>
+                    </button>
+                </div>
+
+                <div class="action-group">
+                    <div class="action-group-title">Herramientas</div>
+                    <button class="action-button" id="autodiagnosisButton">
+                        <span class="action-icon">🔍</span>
+                        <span>Autodiagnóstico</span>
+                    </button>
+                    <button class="action-button" id="cleanupButton">
+                        <span class="action-icon">🧹</span>
+                        <span>Limpieza y Optimización</span>
+                    </button>
+                    <button class="action-button" id="clearHistoryButton">
+                        <span class="action-icon">🗑️</span>
+                        <span>Limpiar Conversación</span>
+                    </button>
+                </div>
+
+                <div class="action-group">
+                    <div class="action-group-title">Sitios Conectados</div>
+                    <div id="savedSitesList">
+                        <!-- Los sitios se cargarán dinámicamente -->
+                    </div>
+                    <button class="action-button" id="configButton">
+                        <span class="action-icon">➕</span>
+                        <span>Añadir Nuevo Sitio</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🎨 ÁREA PRINCIPAL DEL CHAT -->
+        <div class="main-content">
+            <div class="chat-header">
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
+                <div class="chat-title">Chat con Gemini WP-Agent</div>
+                <div class="active-site-indicator" id="activeSiteIndicator" style="display: none;">
+                    <span class="site-indicator-label">Trabajando en:</span>
+                    <span class="site-indicator-name" id="activeSiteName">Sin sitio</span>
+                    <button class="site-selector-btn" id="siteSelectorBtn" title="Cambiar sitio">
+                        <span>▼</span>
+                    </button>
+                    
+                    <!-- Desplegable de sitios -->
+                    <div class="site-dropdown" id="siteDropdown">
+                        <div class="site-dropdown-header">Sitios Conectados</div>
+                        <div id="siteDropdownList">
+                            <!-- Se llena dinámicamente -->
+                        </div>
+                        <div class="site-dropdown-footer">
+                            <button class="add-site-btn" id="addSiteFromDropdown">
+                                ➕ Añadir Sitio
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-subtitle" id="chatSubtitle">Listo para ayudarte</div>
+            </div>
+
+            <div class="chat-area" id="chatArea">
+                <div class="message">
+                    <div class="message-header">
+                        <div class="message-avatar assistant">🤖</div>
+                        <div class="message-author">Gemini WP-Agent</div>
+                        <div class="message-time">Ahora</div>
+                    </div>
+                    <div class="message-content">
+                        <div class="message-text">¡Hola! Soy Gemini WP-Agent, tu asistente conversacional especializado en WordPress. 
+
+Puedo ayudarte con:
+🔧 Gestionar tu sitio WordPress (plugins, temas, usuarios, contenido)
+🎨 Generar código CSS, JavaScript, PHP personalizado
+💬 Responder preguntas sobre desarrollo web
+📝 Crear contenido con bloques de Gutenberg
+🗄️ Optimizar y mantener tu base de datos
+
+Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra lateral, o simplemente pregúntame algo. ¡Estoy aquí para ayudarte!</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-container">
+                    <textarea 
+                        class="message-input" 
+                        id="messageInput" 
+                        placeholder="Escribe tu mensaje aquí... (Ej: 'Lista los plugins', 'Dame CSS para el menú', '¿Cómo optimizar WordPress?')"
+                        rows="1"></textarea>
+                    <button class="send-button" id="sendButton">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🎨 MODAL DE CONFIGURACIÓN -->
+    <div class="modal" id="configModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Configurar WordPress</h2>
+                <button class="modal-close" id="configCloseButton">&times;</button>
+            </div>
+            
+            <form id="configForm">
+                <div class="form-group">
+                    <label class="form-label" for="siteName">Nombre del Sitio *</label>
+                    <input type="text" class="form-input" id="siteName" placeholder="Mi Sitio WordPress" required>
+                    <div class="form-description">Un nombre descriptivo para identificar tu sitio</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="wordpressUrl">URL de WordPress *</label>
+                    <input type="url" class="form-input" id="wordpressUrl" placeholder="https://misitio.com" required>
+                    <div class="form-description">La URL completa de tu sitio WordPress</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="authToken">Token de Seguridad *</label>
+                    <input type="text" class="form-input" id="authToken" placeholder="abc123def456..." required>
+                    <div class="form-description">Token generado por el plugin Gemini WP-CLI Bridge</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="globalGeminiApiKey">API Key de Google Gemini (Opcional)</label>
+                    <input type="text" class="form-input" id="globalGeminiApiKey" placeholder="AIza...">
+                    <div class="form-description">Si usas tu propia API Key, tendrás consultas ilimitadas. Esta configuración se aplicará a todos tus sitios.</div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="configCancelButton">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Configuración</button>
+                </div>
+
+                <div class="config-status" id="configStatus" style="display: none;"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Elementos ocultos para compatibilidad -->
+    <select id="activeSiteSelect" style="display: none;"></select>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html> 
+                transform: translateY(10px);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0);
+            }
+        }
+
+        /* Efecto de escritura para mensajes de Gemini */
+        .typing-effect {
+            overflow: hidden;
+            border-right: 2px solid #00ff88;
+            white-space: nowrap;
+            animation: typing 2s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent; }
+            50% { border-color: #00ff88; }
+        }
+
+        /* Hover effects mejorados */
+        .execute-button:hover:not(:disabled) {
+            background-color: #00cc6a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+        }
+
+        .config-button:hover {
+            background-color: #404040;
+            transform: scale(1.1) rotate(90deg);
+            transition: all 0.3s ease;
+        }
+
+        /* Pulso para elementos importantes */
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Efecto de brillo para texto de Gemini */
+        .gemini-glow {
+            text-shadow: 0 0 10px rgba(66, 133, 244, 0.5);
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message.assistant {
+            text-align: left;
+        }
+
+        .message-content {
+            display: inline-block;
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .message.user .message-content {
+            background-color: #0066cc;
+            color: white;
+        }
+
+        .message.assistant .message-content {
+            background-color: #2d2d2d;
+            color: #e0e0e0;
+            border: 1px solid #404040;
+        }
+
+        .preview-card {
+            background-color: #252525;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+            max-width: 600px;
+        }
+
+        .preview-card.conversational {
+            border-left: 4px solid #00bcd4;
+            background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
+        }
+
+        .preview-section {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .preview-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .preview-icon {
+            font-size: 16px;
+            margin-top: 2px;
+        }
+
+        .preview-label {
+            font-weight: 500;
+            color: #00ff88;
+            min-width: 80px;
+        }
+
+        .preview-content {
+            flex: 1;
+            word-break: break-word;
+        }
+
+        .command-code {
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-family: inherit;
+            color: #00ff88;
+            margin-top: 4px;
+        }
+
+        .security-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .security-safe {
+            color: #27ca3f;
+        }
+
+        .security-unsafe {
+            color: #ff5f56;
+        }
+
+        .execute-button {
+            background-color: #00ff88;
+            color: #1a1a1a;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .execute-button:hover {
+            background-color: #00cc6a;
+            transform: translateY(-1px);
+        }
+
+        .execute-button:disabled {
+            background-color: #404040;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 🔧 Estilos para Auto-healing */
+        .message.recovery {
+            border-left: 4px solid #ffbd2e;
+            background-color: #2a2a1a;
+        }
+
+        .recovery-card {
+            background-color: #252525;
+            border: 1px solid #ffbd2e;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+        }
+
+        .recovery-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #404040;
+        }
+
+        .recovery-icon {
+            font-size: 20px;
+            color: #ffbd2e;
+        }
+
+        .recovery-title {
+            font-weight: 600;
+            color: #ffbd2e;
+            font-size: 16px;
+        }
+
+        .recovery-content {
+            color: #e0e0e0;
+        }
+
+        .recovery-explanation {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .recovery-suggestion {
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .recovery-label {
+            font-weight: 500;
+            color: #00bcd4;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .recovery-button {
+            background-color: #ffbd2e;
+            color: #1a1a1a;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .recovery-button:hover:not(:disabled) {
+            background-color: #e6a826;
+            transform: translateY(-1px);
+        }
+
+        .recovery-button:disabled {
+            background-color: #404040;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .input-area {
+            background-color: #2d2d2d;
+            border-top: 1px solid #333;
+            padding: 20px;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .input-field {
+            width: 100%;
+            background-color: #1a1a1a;
+            border: 1px solid #404040;
+            border-radius: 6px;
+            padding: 12px 16px;
+            color: #e0e0e0;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 44px;
+            max-height: 120px;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.2);
+        }
+
+        .send-button {
+            background-color: #00ff88;
+            color: #1a1a1a;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .send-button:hover:not(:disabled) {
+            background-color: #00cc6a;
+            transform: translateY(-1px);
+        }
+
+        .send-button:disabled {
+            background-color: #404040;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #404040;
+            border-radius: 50%;
+            border-top-color: #00ff88;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Animación de frecuencia de audio estilo Gemini */
+        .gemini-thinking {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+
+        .audio-bars {
+            display: flex;
+            align-items: end;
+            gap: 3px;
+            height: 24px;
+        }
+
+        .audio-bar {
+            width: 4px;
+            background: linear-gradient(180deg, #4285f4 0%, #9c27b0 50%, #00bcd4 100%);
+            border-radius: 2px;
+            animation: audioWave 1.5s ease-in-out infinite;
+        }
+
+        .audio-bar:nth-child(1) { animation-delay: 0s; height: 8px; }
+        .audio-bar:nth-child(2) { animation-delay: 0.1s; height: 16px; }
+        .audio-bar:nth-child(3) { animation-delay: 0.2s; height: 12px; }
+        .audio-bar:nth-child(4) { animation-delay: 0.3s; height: 20px; }
+        .audio-bar:nth-child(5) { animation-delay: 0.4s; height: 6px; }
+        .audio-bar:nth-child(6) { animation-delay: 0.5s; height: 14px; }
+        .audio-bar:nth-child(7) { animation-delay: 0.6s; height: 18px; }
+        .audio-bar:nth-child(8) { animation-delay: 0.7s; height: 10px; }
+
+        @keyframes audioWave {
+            0%, 100% { 
+                transform: scaleY(0.3);
+                opacity: 0.7;
+            }
+            50% { 
+                transform: scaleY(1);
+                opacity: 1;
+            }
+        }
+
+        .thinking-text {
+            color: #e0e0e0;
+            font-size: 14px;
+            background: linear-gradient(90deg, #4285f4, #9c27b0, #00bcd4, #4285f4);
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 2s ease-in-out infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* Degradado animado para botones de carga */
+        .loading-gradient {
+            background: linear-gradient(45deg, #4285f4, #9c27b0, #00bcd4, #4285f4);
+            background-size: 300% 300%;
+            animation: gradientMove 2s ease infinite;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .error-message {
+            background-color: #ff5f56;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 12px 0;
+        }
+
+        .success-message {
+            background-color: #27ca3f;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 12px 0;
+        }
+
+        .command-output {
+            background-color: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 12px;
+            white-space: pre-wrap;
+            font-family: inherit;
+            color: #e0e0e0;
+            max-height: 300px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* Resaltado de sintaxis mejorado */
+        .syntax-highlight {
+            position: relative;
+        }
+
+        .syntax-highlight::before {
+            content: attr(data-language);
+            position: absolute;
+            top: -1px;
+            right: -1px;
+            background: linear-gradient(45deg, #4285f4, #9c27b0);
+            color: white;
+            padding: 2px 8px;
+            font-size: 10px;
+            border-radius: 0 6px 0 6px;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        /* Colores para diferentes tipos de contenido */
+        .highlight-error { color: #ff5f56; font-weight: bold; }
+        .highlight-success { color: #27ca3f; font-weight: bold; }
+        .highlight-warning { color: #ffbd2e; font-weight: bold; }
+        .highlight-info { color: #00bcd4; font-weight: bold; }
+        .highlight-version { color: #9c27b0; font-weight: 500; }
+        .highlight-active { color: #27ca3f; }
+        .highlight-inactive { color: #ff5f56; }
+        .highlight-number { color: #4285f4; }
+        .highlight-string { color: #00ff88; }
+        .highlight-keyword { color: #ffbd2e; font-weight: 500; }
+        .highlight-comment { color: #888; font-style: italic; }
+        .highlight-url { color: #00bcd4; text-decoration: underline; }
+        .highlight-path { color: #9c27b0; }
+        .highlight-status { 
+            padding: 2px 6px; 
+            border-radius: 3px; 
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .highlight-status.active { background: rgba(39, 202, 63, 0.2); color: #27ca3f; }
+        .highlight-status.inactive { background: rgba(255, 95, 86, 0.2); color: #ff5f56; }
+
+        /* Tabla mejorada para listados */
+        .output-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        .output-table th,
+        .output-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        .output-table th {
+            background-color: #2d2d2d;
+            color: #00ff88;
+            font-weight: 500;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .output-table tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Indicadores de estado mejorados */
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .status-indicator.success {
+            background: rgba(39, 202, 63, 0.2);
+            color: #27ca3f;
+        }
+
+        .status-indicator.error {
+            background: rgba(255, 95, 86, 0.2);
+            color: #ff5f56;
+        }
+
+        .status-indicator.warning {
+            background: rgba(255, 189, 46, 0.2);
+            color: #ffbd2e;
+        }
+
+        .status-indicator.info {
+            background: rgba(0, 188, 212, 0.2);
+            color: #00bcd4;
+        }
+
+        /* Scrollbar personalizado */
+        .chat-area::-webkit-scrollbar,
+        .command-output::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-area::-webkit-scrollbar-track,
+        .command-output::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+
+        .chat-area::-webkit-scrollbar-thumb,
+        .command-output::-webkit-scrollbar-thumb {
+            background: #404040;
+            border-radius: 4px;
+        }
+
+        .chat-area::-webkit-scrollbar-thumb:hover,
+        .command-output::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Modal de configuración */
+        .config-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+        }
+
+        .config-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .config-content {
+            background-color: #2d2d2d;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 24px;
+            width: 90%;
+            max-width: 600px;
+            font-family: inherit;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .saved-sites-list {
+            margin: 16px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .saved-site-item {
+            background-color: #1a1a1a;
+            border: 1px solid #404040;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .saved-site-item:hover {
+            border-color: #00ff88;
+            background-color: rgba(0, 255, 136, 0.05);
+        }
+
+        .saved-site-item.active {
+            border-color: #00ff88;
+            background-color: rgba(0, 255, 136, 0.1);
+        }
+
+        .site-info {
+            flex: 1;
+        }
+
+        .site-name {
+            color: #00ff88;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .site-url {
+            color: #888;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .site-status {
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        .site-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .site-action-btn {
+            background: none;
+            border: 1px solid #404040;
+            color: #e0e0e0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .site-action-btn:hover {
+            border-color: #00ff88;
+            color: #00ff88;
+        }
+
+        .site-action-btn.delete:hover {
+            border-color: #ff5f56;
+            color: #ff5f56;
+        }
+
+        .site-action-btn.select {
+            background-color: #00ff88;
+            color: #1a1a1a;
+            border-color: #00ff88;
+        }
+
+        .site-action-btn.select:hover {
+            background-color: #00cc6a;
+        }
+
+        .sites-limit-warning {
+            background-color: rgba(255, 189, 46, 0.1);
+            border: 1px solid #ffbd2e;
+            color: #ffbd2e;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 16px;
+        }
+
+        .config-input select {
+            background-color: #1a1a1a;
+            border: 1px solid #404040;
+            border-radius: 6px;
+            padding: 10px 12px;
+            color: #e0e0e0;
+            font-family: inherit;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .config-input select:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.2);
+        }
+
+        .config-input select option {
+            background-color: #2d2d2d;
+            color: #e0e0e0;
+        }
+
+        .config-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .config-title {
+            color: #00ff88;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .config-close {
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .config-close:hover {
+            background-color: #ff5f56;
+            color: white;
+        }
+
+        .config-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .config-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .config-label {
+            color: #e0e0e0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .config-input {
+            background-color: #1a1a1a;
+            border: 1px solid #404040;
+            border-radius: 6px;
+            padding: 10px 12px;
+            color: #e0e0e0;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .config-input:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.2);
+        }
+
+        .config-help {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .config-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .config-save {
+            background-color: #00ff88;
+            color: #1a1a1a;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex: 1;
+        }
+
+        .config-save:hover {
+            background-color: #00cc6a;
+            transform: translateY(-1px);
+        }
+
+        .config-cancel {
+            background-color: #404040;
+            color: #e0e0e0;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .config-cancel:hover {
+            background-color: #555;
+        }
+
+        .config-status {
+            margin-top: 12px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .config-status.success {
+            background-color: rgba(39, 202, 63, 0.2);
+            color: #27ca3f;
+            border: 1px solid #27ca3f;
+        }
+
+        .config-status.error {
+            background-color: rgba(255, 95, 86, 0.2);
+            color: #ff5f56;
+            border: 1px solid #ff5f56;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .terminal-container {
+                height: 100vh;
+                border: none;
+            }
+
+            .message-content {
+                max-width: 95%;
+            }
+
+            .preview-card {
+                max-width: 100%;
+            }
+
+            .input-container {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .send-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal-container">
+        <div class="terminal-header">
+            <div class="terminal-dots">
+                <div class="dot red"></div>
+                <div class="dot yellow"></div>
+                <div class="dot green"></div>
+            </div>
+            <div class="terminal-title">Gemini WP-Agent - Diagnóstico Inteligente WordPress</div>
+            <div class="terminal-controls">
+                <button onclick="window.geminiApp?.clearHistory()" class="config-button" title="Limpiar Historial de Conversación" style="margin-right: 8px;">
+                    🧠
+                </button>
+                <button onclick="window.geminiApp?.runManualDiagnosis()" class="config-button" title="Ejecutar Autodiagnóstico" style="margin-right: 8px;">
+                    🔍
+                </button>
+                <button id="configButton" class="config-button" title="Configuración">
+                    ⚙️
+                </button>
+            </div>
+        </div>
+
+        <div class="chat-area" id="chatArea">
+            <div class="message assistant">
+                <div class="message-content">
+                    <strong>🤖 Gemini WP-Agent iniciado</strong><br><br>
+                    ¡Hola! Soy <strong>Gemini WP-Agent</strong>, tu experto en DevOps para WordPress. Uso IA avanzada para diagnosticar y resolver problemas de tu sitio.<br><br>
+                    <strong>Primeros pasos:</strong><br>
+                    1. Haz clic en ⚙️ para gestionar tus sitios WordPress<br>
+                    2. Añade un nuevo sitio con su URL y token<br>
+                    3. <strong>Autodiagnóstico automático</strong> se ejecutará al conectar<br>
+                    4. ¡Cuéntame tus problemas para resolverlos!<br><br>
+                    <strong>🔧 Puedo ayudarte con problemas como:</strong><br>
+                    • "Mi sitio está muy lento"<br>
+                    • "Tengo un error 500"<br>
+                    • "No puedo entrar al admin"<br>
+                    • "Creo que me hackearon"<br><br>
+                    <strong>📋 También comandos normales:</strong><br>
+                    • "Lista todos los plugins"<br>
+                    • "Muestra los usuarios"<br>
+                    • "Información del servidor"<br><br>
+                    <em>🧠 Powered by Gemini AI - Analizo tu problema y sugiero la mejor solución.</em><br>
+                    <em>🔍 Autodiagnóstico inteligente para máxima compatibilidad.</em><br>
+                    <em>💾 Tus sitios se guardan por 30 días automáticamente.</em>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea 
+                        id="messageInput" 
+                        class="input-field" 
+                        placeholder="Cuéntame tu problema o solicitud... Ej: 'Mi sitio está lento', 'Error 500', 'Lista los plugins'"
+                        rows="1"
+                    ></textarea>
+                </div>
+                <button id="sendButton" class="send-button">
+                    Enviar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Configuración -->
+    <div id="configModal" class="config-modal">
+        <div class="config-content">
+            <div class="config-header">
+                <div class="config-title">⚙️ Configuración de Sitios WordPress</div>
+                <button id="configCloseButton" class="config-close">✕</button>
+            </div>
+            
+            <!-- Selector de sitio activo -->
+            <div class="config-field">
+                <label class="config-label">Sitio Activo</label>
+                <select id="activeSiteSelect" class="config-input">
+                    <option value="">Seleccionar sitio...</option>
+                </select>
+                <div class="config-help">Selecciona el sitio WordPress que quieres usar</div>
+            </div>
+
+            <!-- Lista de sitios guardados -->
+            <div id="savedSitesList" class="saved-sites-list">
+                <!-- Se llena dinámicamente -->
+            </div>
+            
+            <form id="configForm" class="config-form">
+                <h3 style="color: #00ff88; margin: 20px 0 10px 0;">➕ Añadir Nuevo Sitio</h3>
+                
+                <div class="config-field">
+                    <label class="config-label" for="siteName">Nombre del Sitio</label>
+                    <input 
+                        type="text" 
+                        id="siteName" 
+                        class="config-input" 
+                        placeholder="Mi Sitio WordPress"
+                        required
+                    >
+                    <div class="config-help">Nombre descriptivo para identificar este sitio</div>
+                </div>
+
+                <div class="config-field">
+                    <label class="config-label" for="wordpressUrl">URL de WordPress</label>
+                    <input 
+                        type="url" 
+                        id="wordpressUrl" 
+                        class="config-input" 
+                        placeholder="https://mi-sitio.com"
+                        required
+                    >
+                    <div class="config-help">URL completa de tu sitio WordPress (sin /wp-json al final)</div>
+                </div>
+
+                <div class="config-field">
+                    <label class="config-label" for="authToken">Token de Seguridad</label>
+                    <input 
+                        type="text" 
+                        id="authToken" 
+                        class="config-input" 
+                        placeholder="HACKATHON_GEMINI_2025_SECURE_KEY"
+                        required
+                    >
+                    <div class="config-help">Debe coincidir con el token configurado en el plugin de WordPress</div>
+                </div>
+
+                <div class="config-field">
+                    <label class="config-label" for="geminiApiKey">Google Gemini API Key (Opcional)</label>
+                    <input 
+                        type="text" 
+                        id="geminiApiKey" 
+                        class="config-input" 
+                        placeholder="AIzaSy..."
+                    >
+                    <div class="config-help">Si usas tu propia llave, no tendrás límites de uso</div>
+                </div>
+
+                <div class="config-actions">
+                    <button type="button" id="configCancelButton" class="config-cancel">Cancelar</button>
+                    <button type="submit" class="config-save">Añadir Sitio</button>
+                </div>
+
+                <div id="configStatus" class="config-status" style="display: none;"></div>
+            </form>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        // Debug: verificar que CONFIG se cargó
+        console.log('📋 CONFIG cargado:', typeof CONFIG !== 'undefined' ? '✅' : '❌');
+        if (typeof CONFIG !== 'undefined') {
+            console.log('🔧 CONFIG:', CONFIG);
+        }
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>
