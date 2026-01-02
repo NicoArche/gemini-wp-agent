@@ -625,6 +625,61 @@ function gemini_execute_wp_native($command) {
                     
                 case 'update':
                     $plugin_slug = $args[0] ?? '';
+                    
+                    // Manejar actualización de todos los plugins
+                    if ($plugin_slug === '--all' || empty($plugin_slug)) {
+                        // Verificar actualizaciones disponibles
+                        if (!function_exists('get_plugin_updates')) {
+                            require_once ABSPATH . 'wp-admin/includes/update.php';
+                        }
+                        
+                        wp_update_plugins();
+                        $updates = get_plugin_updates();
+                        
+                        if (empty($updates)) {
+                            return "All plugins are already up to date.";
+                        }
+                        
+                        // Actualizar todos los plugins que tienen actualizaciones
+                        if (!class_exists('Plugin_Upgrader')) {
+                            require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+                        }
+                        
+                        $upgrader = new Plugin_Upgrader();
+                        $updated_plugins = array();
+                        $failed_plugins = array();
+                        
+                        foreach ($updates as $plugin_file => $plugin_data) {
+                            $result = $upgrader->upgrade($plugin_file);
+                            
+                            if (is_wp_error($result)) {
+                                $failed_plugins[] = $plugin_data->Name . ': ' . $result->get_error_message();
+                            } elseif ($result) {
+                                $updated_plugins[] = $plugin_data->Name;
+                            } else {
+                                $failed_plugins[] = $plugin_data->Name . ': Unknown error';
+                            }
+                        }
+                        
+                        $output = '';
+                        if (!empty($updated_plugins)) {
+                            $output .= "Successfully updated plugins:\n";
+                            foreach ($updated_plugins as $plugin_name) {
+                                $output .= "- $plugin_name\n";
+                            }
+                        }
+                        
+                        if (!empty($failed_plugins)) {
+                            $output .= "\nFailed to update plugins:\n";
+                            foreach ($failed_plugins as $error) {
+                                $output .= "- $error\n";
+                            }
+                        }
+                        
+                        return $output ?: "No plugins were updated.";
+                    }
+                    
+                    // Actualización de plugin específico
                     if (!$plugin_slug) {
                         return "Error: Plugin slug required for update.";
                     }
@@ -862,6 +917,61 @@ function gemini_execute_wp_native($command) {
                     
                 case 'update':
                     $theme_slug = $args[0] ?? '';
+                    
+                    // Manejar actualización de todos los temas
+                    if ($theme_slug === '--all' || empty($theme_slug)) {
+                        // Verificar actualizaciones disponibles
+                        if (!function_exists('get_theme_updates')) {
+                            require_once ABSPATH . 'wp-admin/includes/update.php';
+                        }
+                        
+                        wp_update_themes();
+                        $updates = get_theme_updates();
+                        
+                        if (empty($updates)) {
+                            return "All themes are already up to date.";
+                        }
+                        
+                        // Actualizar todos los temas que tienen actualizaciones
+                        if (!class_exists('Theme_Upgrader')) {
+                            require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+                        }
+                        
+                        $upgrader = new Theme_Upgrader();
+                        $updated_themes = array();
+                        $failed_themes = array();
+                        
+                        foreach ($updates as $theme_slug => $theme_data) {
+                            $result = $upgrader->upgrade($theme_slug);
+                            
+                            if (is_wp_error($result)) {
+                                $failed_themes[] = $theme_data->get('Name') . ': ' . $result->get_error_message();
+                            } elseif ($result) {
+                                $updated_themes[] = $theme_data->get('Name');
+                            } else {
+                                $failed_themes[] = $theme_data->get('Name') . ': Unknown error';
+                            }
+                        }
+                        
+                        $output = '';
+                        if (!empty($updated_themes)) {
+                            $output .= "Successfully updated themes:\n";
+                            foreach ($updated_themes as $theme_name) {
+                                $output .= "- $theme_name\n";
+                            }
+                        }
+                        
+                        if (!empty($failed_themes)) {
+                            $output .= "\nFailed to update themes:\n";
+                            foreach ($failed_themes as $error) {
+                                $output .= "- $error\n";
+                            }
+                        }
+                        
+                        return $output ?: "No themes were updated.";
+                    }
+                    
+                    // Actualización de tema específico
                     if (!$theme_slug) {
                         return "Error: Theme slug required for update.";
                     }

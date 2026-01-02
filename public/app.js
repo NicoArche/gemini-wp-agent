@@ -1,4 +1,7 @@
-﻿class GeminiWPCLI {
+﻿// 🚀 VERSIÓN 3.4 - DETECCIÓN DE CÓDIGO SIN TRIPLE BACKTICKS IMPLEMENTADA
+console.log('🔥 APP.JS v3.4 CARGADO - DETECTA CÓDIGO GEMINI SIN BACKTICKS 🔥');
+
+class GeminiWPCLI {
     constructor() {
         console.log('🔧 Inicializando constructor...');
         
@@ -896,6 +899,8 @@
     }
 
     addMessage(type, content) {
+        console.log('🔍 addMessage llamado:', { type, contentLength: content?.length });
+        
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${type}`;
         
@@ -904,8 +909,12 @@
         
         // Aplicar renderizado Markdown mejorado solo a mensajes del asistente
         if (type === 'assistant') {
-            contentDiv.innerHTML = this.renderMarkdown(content);
+            console.log('🎨 Aplicando renderizado Markdown...');
+            const renderedContent = this.renderMarkdown(content);
+            console.log('✅ Markdown renderizado, longitud:', renderedContent?.length);
+            contentDiv.innerHTML = renderedContent;
         } else {
+            console.log('👤 Mensaje de usuario, sin renderizado');
             contentDiv.innerHTML = content;
         }
         
@@ -915,6 +924,12 @@
     }
 
     addPreviewCard(geminiResponse) {
+        console.log('🎨 addPreviewCard llamado con:', { 
+            is_conversational: geminiResponse.is_conversational, 
+            has_command: !!geminiResponse.command,
+            explanation_length: geminiResponse.explanation?.length 
+        });
+        
         const cardDiv = document.createElement('div');
         cardDiv.className = 'message assistant';
         
@@ -923,12 +938,18 @@
         
         // Verificar si es una respuesta conversacional
         if (geminiResponse.is_conversational || !geminiResponse.command) {
+            console.log('💬 Respuesta conversacional detectada, aplicando renderizado Markdown...');
+            
+            // APLICAR RENDERIZADO MARKDOWN A LA EXPLICACIÓN
+            const renderedExplanation = this.renderMarkdown(geminiResponse.explanation);
+            console.log('✅ Markdown aplicado a explicación conversacional');
+            
             contentDiv.innerHTML = `
                 <div class="preview-card conversational">
                     <div class="preview-section">
                         <div class="preview-icon">💬</div>
                         <div class="preview-label">Gemini AI:</div>
-                        <div class="preview-content">${geminiResponse.explanation}</div>
+                        <div class="preview-content">${renderedExplanation}</div>
                     </div>
                     
                     ${geminiResponse.agent_thought ? `
@@ -949,6 +970,12 @@
             return;
         }
         
+        console.log('🔧 Respuesta con comando detectada, aplicando renderizado Markdown a explicación...');
+        
+        // APLICAR RENDERIZADO MARKDOWN A LA EXPLICACIÓN TAMBIÉN EN COMANDOS
+        const renderedExplanation = this.renderMarkdown(geminiResponse.explanation);
+        console.log('✅ Markdown aplicado a explicación de comando');
+        
         // Generar ID único para el botón (solo para comandos)
         const buttonId = 'btn_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         
@@ -957,7 +984,7 @@
                 <div class="preview-section">
                     <div class="preview-icon">🤖</div>
                     <div class="preview-label">Explicación:</div>
-                    <div class="preview-content">${geminiResponse.explanation}</div>
+                    <div class="preview-content">${renderedExplanation}</div>
                 </div>
                 
                 <div class="preview-section">
@@ -2185,18 +2212,156 @@ Puedo ayudarte con:
         }
     }
 
+    // Función para normalizar texto de Gemini antes del renderizado Markdown
+    normalizeGeminiMarkdown(text) {
+        if (!text) return text;
+        
+        console.log('🔧 Normalizando texto de Gemini...');
+        
+        // Debug: mostrar algunos caracteres problemáticos
+        const problematicChars = text.match(/[\u2018\u2019\u00B4\u201C\u201D\u2028\u2029\u200B-\u200D\uFEFF]/g);
+        if (problematicChars) {
+            console.log('⚠️ Caracteres problemáticos encontrados:', problematicChars.map(c => `${c} (U+${c.charCodeAt(0).toString(16).toUpperCase()})`));
+        }
+        
+        return text
+            // Normalizar backticks falsos a backticks ASCII
+            .replace(/[\u2018\u2019\u00B4]/g, '`')  // Comillas curvas y acento agudo → backtick
+            .replace(/[\u201C\u201D]/g, '"')        // Comillas dobles curvas → comillas ASCII
+            
+            // Normalizar saltos de línea
+            .replace(/\r\n/g, '\n')                // Windows line endings → Unix
+            .replace(/\u2028|\u2029/g, '\n')       // Unicode line/paragraph separators → \n
+            
+            // Eliminar caracteres invisibles
+            .replace(/[\u200B-\u200D\uFEFF]/g, '') // Zero-width spaces, BOM, etc.
+            
+            // Normalizar espacios no estándar
+            .replace(/\u00A0/g, ' ')               // Non-breaking space → space
+            .replace(/\u2000-\u200A/g, ' ')        // Various Unicode spaces → space
+            
+            // Limpiar múltiples espacios y líneas vacías excesivas
+            .replace(/[ \t]+/g, ' ')               // Multiple spaces/tabs → single space
+            .replace(/\n{3,}/g, '\n\n');           // Multiple newlines → max 2
+    }
+
     // Función para renderizar Markdown básico
     renderMarkdown(content) {
-        if (!content) return '';
+        console.log('🔧 renderMarkdown iniciado, contenido:', content?.substring(0, 100) + '...');
         
-        let formatted = content;
+        if (!content) {
+            console.log('❌ Contenido vacío, retornando string vacío');
+            return '';
+        }
         
-        // Procesar bloques de código
-        formatted = formatted.replace(/```(\w+)?\n?([\s\S]*?)```/g, (match, language, code) => {
+        // NORMALIZAR CONTENIDO ANTES DE PROCESAR
+        const normalizedContent = this.normalizeGeminiMarkdown(content);
+        console.log('✅ Contenido normalizado');
+        
+        // Debug: comparar contenido original vs normalizado
+        if (content !== normalizedContent) {
+            console.log('🔄 Contenido cambió después de normalización');
+            console.log('📄 Original (primeros 200 chars):', content.substring(0, 200));
+            console.log('📄 Normalizado (primeros 200 chars):', normalizedContent.substring(0, 200));
+        }
+        
+        let formatted = normalizedContent;
+        console.log('📝 Contenido a procesar:', formatted.length, 'caracteres');
+        
+        // 🔍 DEBUG AVANZADO: Analizar el contenido completo
+        console.log('🔍 ANÁLISIS COMPLETO DEL CONTENIDO:');
+        console.log('📄 Contenido completo:', formatted);
+        
+        // Buscar diferentes patrones de código
+        const patterns = {
+            'triple_backticks': /```[\s\S]*?```/g,
+            'triple_backticks_with_lang': /```\w+[\s\S]*?```/g,
+            'single_backticks': /`[^`]+`/g,
+            'code_word': /código|code|php|css|javascript|html/gi
+        };
+        
+        Object.entries(patterns).forEach(([name, pattern]) => {
+            const matches = formatted.match(pattern);
+            console.log(`🔍 Patrón ${name}:`, matches?.length || 0, matches ? matches.slice(0, 3) : 'ninguno');
+        });
+        
+        // Procesar bloques de código con contenido normalizado
+        const codeBlockRegex = /```(\w+)?\n?([\s\S]*?)```/g;
+        const codeMatches = formatted.match(codeBlockRegex);
+        console.log('🔍 Bloques de código encontrados:', codeMatches?.length || 0);
+        
+        // 🆕 DETECTAR CÓDIGO SIN TRIPLE BACKTICKS (formato Gemini alternativo)
+        if ((!codeMatches || codeMatches.length === 0)) {
+            console.log('🔍 Buscando patrones alternativos de código...');
+            
+            // Patrón: "css" o "php" seguido directamente de código (sin backticks)
+            const altCodeRegex = /\n(css|php|javascript|js|html|sql|bash|python|py)\n?([\s\S]*?)(?=\n\n|\*\*|$)/gi;
+            const altMatches = formatted.match(altCodeRegex);
+            
+            if (altMatches && altMatches.length > 0) {
+                console.log('✅ Encontrados bloques alternativos:', altMatches.length);
+                
+                formatted = formatted.replace(altCodeRegex, (match, language, code) => {
+                    const lang = language.toLowerCase();
+                    const cleanCode = code.trim();
+                    const codeId = 'code_' + Math.random().toString(36).substr(2, 9);
+                    const displayName = this.getLanguageDisplayName(lang);
+                    
+                    console.log('🎨 Procesando bloque alternativo:', { lang, displayName, codeLength: cleanCode.length });
+                    
+                    return `
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span class="code-language language-${lang}">${displayName}</span>
+                                <button class="copy-button" onclick="copyCodeToClipboard('${codeId}', this)">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                    Copiar código
+                                </button>
+                            </div>
+                            <pre class="code-content" id="${codeId}"><code class="language-${lang}">${this.escapeHtml(cleanCode)}</code></pre>
+                        </div>
+                    `;
+                });
+            }
+        }
+        
+        // Debug: si no encuentra bloques, mostrar muestra del contenido
+        if (!codeMatches || codeMatches.length === 0) {
+            console.log('🔍 Buscando backticks en el contenido...');
+            const backtickMatches = formatted.match(/`/g);
+            console.log('📊 Backticks ASCII encontrados:', backtickMatches?.length || 0);
+            
+            // Mostrar contexto alrededor de posibles bloques de código
+            const possibleCodeBlocks = formatted.match(/```[\s\S]{0,50}/g);
+            if (possibleCodeBlocks) {
+                console.log('🔍 Posibles inicios de bloques:', possibleCodeBlocks);
+            }
+            
+            // 🆕 Buscar patrones alternativos que Gemini podría usar
+            const alternativePatterns = [
+                /\n\s*```[\s\S]*?```\s*\n/g,  // Con espacios alrededor
+                /```[^`]*```/g,                // Sin saltos de línea internos
+                /`{3,}[\s\S]*?`{3,}/g         // 3 o más backticks
+            ];
+            
+            alternativePatterns.forEach((pattern, index) => {
+                const altMatches = formatted.match(pattern);
+                if (altMatches) {
+                    console.log(`🔍 Patrón alternativo ${index + 1}:`, altMatches.length, altMatches);
+                }
+            });
+        }
+        
+        formatted = formatted.replace(codeBlockRegex, (match, language, code) => {
             const lang = language || 'text';
             const cleanCode = code.trim();
             const codeId = 'code_' + Math.random().toString(36).substr(2, 9);
             const displayName = this.getLanguageDisplayName(lang);
+            
+            console.log('🎨 Procesando bloque de código:', { lang, displayName, codeLength: cleanCode.length });
             
             return `
                 <div class="code-block">
@@ -2239,6 +2404,16 @@ Puedo ayudarte con:
         
         // Procesar código inline
         formatted = formatted.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+        
+        console.log('✅ Renderizado completado, longitud final:', formatted.length);
+        
+        // Debug: verificar si se generaron bloques de código
+        const codeBlockCount = (formatted.match(/class="code-block"/g) || []).length;
+        console.log('🔍 Bloques de código generados en HTML:', codeBlockCount);
+        
+        if (codeBlockCount > 0) {
+            console.log('📄 HTML generado (primeros 500 chars):', formatted.substring(0, 500));
+        }
         
         return formatted;
     }
@@ -2358,4 +2533,119 @@ function copyCodeToClipboard(codeId, button) {
             document.body.removeChild(textArea);
         }
     });
+}
+
+// 🧪 Función de prueba para simular respuesta de Gemini con código
+function testGeminiResponseWithCode() {
+    console.log('🧪 INICIANDO PRUEBA DE RESPUESTA GEMINI CON CÓDIGO');
+    
+    // Simular diferentes tipos de respuestas que Gemini podría enviar
+    const testResponses = [
+        {
+            name: 'Respuesta con código CSS normal',
+            content: `¡Hola! Claro, puedo ayudarte con eso.
+
+Para dejar fijo un header en WordPress, normalmente necesitas añadir CSS personalizado. Aquí tienes el código:
+
+\`\`\`css
+.site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 999;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+body {
+    padding-top: 80px; /* Ajusta según la altura de tu header */
+}
+\`\`\`
+
+Este código hará que tu header se mantenga fijo en la parte superior de la página.`
+        },
+        {
+            name: 'Respuesta con caracteres Unicode problemáticos',
+            content: `¡Hola! Claro, puedo ayudarte con eso.
+
+Para dejar fijo un header en WordPress, normalmente necesitas añadir CSS personalizado. Aquí tienes el código:
+
+\u2018\u2018\u2018css
+.site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 999;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+body {
+    padding-top: 80px; /* Ajusta según la altura de tu header */
+}
+\u2019\u2019\u2019
+
+Este código hará que tu header se mantenga fijo en la parte superior de la página.`
+        }
+    ];
+    
+    testResponses.forEach((testResponse, index) => {
+        console.log(`\n🧪 PRUEBA ${index + 1}: ${testResponse.name}`);
+        console.log('📄 Contenido original:', testResponse.content);
+        
+        if (window.geminiApp && window.geminiApp.renderMarkdown) {
+            const result = window.geminiApp.renderMarkdown(testResponse.content);
+            console.log('✅ Resultado renderizado:', result);
+            
+            // Añadir el mensaje a la interfaz
+            window.geminiApp.addMessage('assistant', testResponse.content);
+        } else {
+            console.error('❌ window.geminiApp no disponible');
+        }
+    });
+    
+    console.log('\n🧪 PRUEBAS COMPLETADAS');
+}
+// 🧪 Función de prueba específica para formato Gemini sin backticks
+function testGeminiAlternativeFormat() {
+    console.log('🧪 INICIANDO PRUEBA DE FORMATO ALTERNATIVO GEMINI');
+    
+    // Simular la respuesta real que recibiste de Gemini
+    const realGeminiResponse = `¡Claro que sí! Para dejar fijo un header en WordPress, generalmente necesitas aplicar algo de CSS. Aquí tienes un ejemplo básico que puedes añadir a tu archivo \`style.css\` del tema hijo, o en el personalizador de WordPress (Apariencia > Personalizar > CSS Adicional):
+
+css
+/* Para un header fijo en la parte superior */
+.site-header { /* O el selector de tu header, como #masthead, #header, etc. */
+    position: fixed;
+    top: 0;
+    width: 100%; /* Asegura que ocupe todo el ancho */
+    background-color: #ffffff; /* Un color de fondo para que el contenido no se vea a través */
+    z-index: 1000; /* Asegura que el header esté por encima de otros elementos */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Opcional: una sombra sutil */
+}
+
+/* IMPORTANTE: Añade un padding al body para que el contenido no quede debajo del header fijo */
+body {
+    padding-top: 80px; /* Ajusta este valor según la altura de tu header */
+}
+
+**Explicación:**
+
+1. **\`.site-header\`**: Este es un selector de ejemplo.`;
+    
+    console.log('📄 Contenido de prueba (formato real Gemini):', realGeminiResponse);
+    
+    if (window.geminiApp && window.geminiApp.renderMarkdown) {
+        const result = window.geminiApp.renderMarkdown(realGeminiResponse);
+        console.log('✅ Resultado renderizado:', result);
+        
+        // Añadir el mensaje a la interfaz
+        window.geminiApp.addMessage('assistant', realGeminiResponse);
+    } else {
+        console.error('❌ window.geminiApp no disponible');
+    }
+    
+    console.log('🧪 PRUEBA DE FORMATO ALTERNATIVO COMPLETADA');
 }

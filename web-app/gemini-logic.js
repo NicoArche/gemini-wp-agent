@@ -402,6 +402,38 @@ ${quotaNote}. ¿Qué funcionalidad específica necesitas? Puedo crear JavaScript
       is_safe: true,
       agent_thought: isQuotaError ? "Gemini AI disponible pero con límite de cuota alcanzado" : "Sistema de emergencia: problema de acceso, verifico usuarios admin"
     };
+  } else if (lowerInput.includes('actualizar') && (lowerInput.includes('plugin') || lowerInput.includes('plugins'))) {
+    if (lowerInput.includes('todos') || lowerInput.includes('all')) {
+      return {
+        command: "wp plugin update --all",
+        explanation: `Actualizando todos los plugins que tengan actualizaciones disponibles${quotaNote}.`,
+        is_safe: true,
+        agent_thought: isQuotaError ? "Gemini AI disponible pero con límite de cuota alcanzado" : "Sistema de emergencia: actualización masiva de plugins"
+      };
+    } else {
+      return {
+        command: "wp plugin list",
+        explanation: `Mostrando lista de plugins para que puedas elegir cuáles actualizar${quotaNote}.`,
+        is_safe: true,
+        agent_thought: isQuotaError ? "Gemini AI disponible pero con límite de cuota alcanzado" : "Sistema de emergencia: listado de plugins para actualización selectiva"
+      };
+    }
+  } else if (lowerInput.includes('actualizar') && (lowerInput.includes('tema') || lowerInput.includes('temas') || lowerInput.includes('theme'))) {
+    if (lowerInput.includes('todos') || lowerInput.includes('all')) {
+      return {
+        command: "wp theme update --all",
+        explanation: `Actualizando todos los temas que tengan actualizaciones disponibles${quotaNote}.`,
+        is_safe: true,
+        agent_thought: isQuotaError ? "Gemini AI disponible pero con límite de cuota alcanzado" : "Sistema de emergencia: actualización masiva de temas"
+      };
+    } else {
+      return {
+        command: "wp theme list",
+        explanation: `Mostrando lista de temas para que puedas elegir cuáles actualizar${quotaNote}.`,
+        is_safe: true,
+        agent_thought: isQuotaError ? "Gemini AI disponible pero con límite de cuota alcanzado" : "Sistema de emergencia: listado de temas para actualización selectiva"
+      };
+    }
   } else if (lowerInput.includes('plugin')) {
     return {
       command: "wp plugin list",

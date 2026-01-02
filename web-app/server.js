@@ -268,7 +268,21 @@ app.post('/api/gemini/ask', async (req, res) => {
         }
 
         // Llamar a la función de Gemini con contexto, historial y API Key opcional
+        console.log(`🧠 [${requestId}] Llamando a getWpCommand con:`, {
+            prompt: prompt.trim(),
+            siteContextKeys: Object.keys(validatedSiteContext),
+            chatHistoryLength: validatedChatHistory.length,
+            hasUserApiKey: !!userApiKey
+        });
+        
         const geminiResponse = await getWpCommand(prompt.trim(), siteContext || {}, userApiKey, chatHistory || []);
+        
+        console.log(`✅ [${requestId}] getWpCommand completado:`, {
+            hasCommand: !!geminiResponse.command,
+            explanationLength: geminiResponse.explanation?.length || 0,
+            isConversational: geminiResponse.is_conversational,
+            isSafe: geminiResponse.is_safe
+        });
 
         // Verificar si hubo error en Gemini
         if (geminiResponse.error) {
@@ -523,10 +537,20 @@ app.post('/api/wp-cli/server-info', async (req, res) => {
 
 // 🚀 ENDPOINT: Ejecutar comandos WP-CLI
 app.post('/api/wp-cli/execute', async (req, res) => {
+    const requestId = `exec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    console.log(`🚀 [${requestId}] Nueva solicitud de ejecución de comando`);
+    
     try {
         const { command, wordpressUrl, authToken } = req.body;
+        
+        console.log(`🔍 [${requestId}] Parámetros recibidos:`, {
+            command: command,
+            wordpressUrl: wordpressUrl,
+            hasAuthToken: !!authToken
+        });
 
         if (!command || !wordpressUrl || !authToken) {
+            console.log(`❌ [${requestId}] Parámetros faltantes`);
             return res.status(400).json({
                 status: 'error',
                 message: 'Faltan parámetros: command, wordpressUrl, authToken'
@@ -536,18 +560,20 @@ app.post('/api/wp-cli/execute', async (req, res) => {
         let cleanUrl;
         try {
             cleanUrl = new URL(wordpressUrl).origin;
+            console.log(`✅ [${requestId}] URL limpia: ${cleanUrl}`);
         } catch (error) {
+            console.log(`❌ [${requestId}] URL inválida: ${wordpressUrl}`);
             return res.status(400).json({
                 status: 'error',
                 message: 'URL de WordPress inválida'
             });
         }
 
-        console.log(`🚀 Ejecutando comando: ${command} en ${cleanUrl}`);
+        console.log(`🚀 [${requestId}] Ejecutando comando: ${command} en ${cleanUrl}`);
 
         // 🧪 MODO DEMO: Si la URL contiene "demo" o "test", simular respuesta
         if (cleanUrl.includes('demo') || cleanUrl.includes('test') || cleanUrl.includes('localhost')) {
-            console.log('🧪 Modo demo activado - simulando respuesta');
+            console.log(`🧪 [${requestId}] Modo demo activado - simulando respuesta`);
             
             let demoResponse = '';
             
@@ -578,6 +604,7 @@ WordPress 6.4.2`;
 Resultado: ${command}`;
             }
 
+            console.log(`✅ [${requestId}] Respuesta demo generada`);
             return res.json({
                 status: 'success',
                 command: command,
@@ -590,6 +617,8 @@ Resultado: ${command}`;
             });
         }
 
+        console.log(`🌐 [${requestId}] Intentando conectar con WordPress real...`);
+        
         // Llamar al endpoint de ejecución del plugin WordPress
         const wpResponse = await fetch(`${cleanUrl}/wp-json/gemini/v1/execute`, {
             method: 'POST',
@@ -603,12 +632,15 @@ Resultado: ${command}`;
             }),
             timeout: 30000 // 30 segundos
         });
+        
+        console.log(`📡 [${requestId}] Respuesta de WordPress: ${wpResponse.status} ${wpResponse.statusText}`);
 
         if (!wpResponse.ok) {
             throw new Error(`WordPress API respondió con ${wpResponse.status}: ${wpResponse.statusText}`);
         }
 
         const wpData = await wpResponse.json();
+        console.log(`✅ [${requestId}] Datos recibidos de WordPress:`, Object.keys(wpData));
 
         res.json({
             status: 'success',
@@ -621,13 +653,14 @@ Resultado: ${command}`;
         });
 
     } catch (error) {
-        console.error('❌ Error en /api/wp-cli/execute:', error);
+        console.error(`❌ [${requestId}] Error en /api/wp-cli/execute:`, error);
         
         res.status(500).json({
             status: 'error',
             message: error.message,
             error_type: error.name,
             command: req.body.command,
+            request_id: requestId,
             timestamp: new Date().toISOString()
         });
     }
