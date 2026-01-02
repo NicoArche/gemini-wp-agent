@@ -1,4 +1,4 @@
-class GeminiWPCLI {
+﻿class GeminiWPCLI {
     constructor() {
         console.log('🔧 Inicializando constructor...');
         
@@ -902,9 +902,9 @@ class GeminiWPCLI {
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
         
-        // Aplicar formato mejorado solo a mensajes del asistente
+        // Aplicar renderizado Markdown mejorado solo a mensajes del asistente
         if (type === 'assistant') {
-            contentDiv.innerHTML = this.formatMessage(content);
+            contentDiv.innerHTML = this.renderMarkdown(content);
         } else {
             contentDiv.innerHTML = content;
         }
@@ -912,168 +912,6 @@ class GeminiWPCLI {
         messageDiv.appendChild(contentDiv);
         this.chatArea.appendChild(messageDiv);
         this.scrollToBottom();
-    }
-
-    // Función para mejorar el formato de mensajes del asistente
-    formatMessage(content) {
-        if (!content) return '';
-        
-        let formatted = content;
-        
-        // 1. Procesar bloques de código (```código```)
-        formatted = this.processCodeBlocks(formatted);
-        
-        // 2. Procesar encabezados (# ## ###)
-        formatted = this.processHeaders(formatted);
-        
-        // 3. Procesar listas numeradas (1. 2. 3.)
-        formatted = this.processNumberedLists(formatted);
-        
-        // 4. Procesar listas con viñetas (- * +)
-        formatted = this.processBulletLists(formatted);
-        
-        // 5. Procesar párrafos (separar por líneas vacías)
-        formatted = this.processParagraphs(formatted);
-        
-        // 6. Mejorar texto en negrita
-        formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong class="text-highlight">$1</strong>');
-        
-        // 7. Mejorar texto en cursiva
-        formatted = formatted.replace(/\*(.*?)\*/g, '<em class="text-emphasis">$1</em>');
-        
-        // 8. Mejorar código inline
-        formatted = formatted.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
-        
-        // 9. Mejorar comandos WP-CLI
-        formatted = formatted.replace(/\b(wp\s+[a-zA-Z-]+(?:\s+[a-zA-Z-]+)*)/g, '<span class="wp-command">$1</span>');
-        
-        return formatted;
-    }
-
-    // Procesar bloques de código
-    processCodeBlocks(content) {
-        return content.replace(/```(\w+)?\n?([\s\S]*?)```/g, (match, language, code) => {
-            const lang = language || 'text';
-            const cleanCode = code.trim();
-            const codeId = 'code_' + Math.random().toString(36).substr(2, 9);
-            
-            return `
-                <div class="code-block">
-                    <div class="code-header">
-                        <span class="code-language">${lang}</span>
-                        <button class="copy-button" onclick="copyCodeToClipboard('${codeId}', this)">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                            </svg>
-                            Copiar código
-                        </button>
-                    </div>
-                    <pre class="code-content" id="${codeId}"><code class="language-${lang}">${this.escapeHtml(cleanCode)}</code></pre>
-                </div>
-            `;
-        });
-    }
-
-    // Procesar encabezados
-    processHeaders(content) {
-        return content
-            .replace(/^### (.*$)/gm, '<h3 class="response-h3">$1</h3>')
-            .replace(/^## (.*$)/gm, '<h2 class="response-h2">$1</h2>')
-            .replace(/^# (.*$)/gm, '<h1 class="response-h1">$1</h1>');
-    }
-
-    // Procesar listas numeradas
-    processNumberedLists(content) {
-        const lines = content.split('\n');
-        const result = [];
-        let inList = false;
-        let listItems = [];
-
-        for (const line of lines) {
-            const match = line.match(/^(\d+)\.\s+(.*)$/);
-            if (match) {
-                if (!inList) {
-                    inList = true;
-                    listItems = [];
-                }
-                listItems.push(match[2]);
-            } else {
-                if (inList) {
-                    result.push('<ol class="numbered-list">' + 
-                        listItems.map(item => `<li class="list-item">${item}</li>`).join('') + 
-                        '</ol>');
-                    inList = false;
-                    listItems = [];
-                }
-                result.push(line);
-            }
-        }
-
-        if (inList) {
-            result.push('<ol class="numbered-list">' + 
-                listItems.map(item => `<li class="list-item">${item}</li>`).join('') + 
-                '</ol>');
-        }
-
-        return result.join('\n');
-    }
-
-    // Procesar listas con viñetas
-    processBulletLists(content) {
-        const lines = content.split('\n');
-        const result = [];
-        let inList = false;
-        let listItems = [];
-
-        for (const line of lines) {
-            const match = line.match(/^[-*+]\s+(.*)$/);
-            if (match) {
-                if (!inList) {
-                    inList = true;
-                    listItems = [];
-                }
-                listItems.push(match[1]);
-            } else {
-                if (inList) {
-                    result.push('<ul class="bullet-list">' + 
-                        listItems.map(item => `<li class="list-item">${item}</li>`).join('') + 
-                        '</ul>');
-                    inList = false;
-                    listItems = [];
-                }
-                result.push(line);
-            }
-        }
-
-        if (inList) {
-            result.push('<ul class="bullet-list">' + 
-                listItems.map(item => `<li class="list-item">${item}</li>`).join('') + 
-                '</ul>');
-        }
-
-        return result.join('\n');
-    }
-
-    // Procesar párrafos
-    processParagraphs(content) {
-        return content
-            .split('\n\n')
-            .map(paragraph => {
-                const trimmed = paragraph.trim();
-                if (trimmed && !trimmed.startsWith('<')) {
-                    return `<p class="response-paragraph">${trimmed}</p>`;
-                }
-                return trimmed;
-            })
-            .join('\n\n');
-    }
-
-    // Escapar HTML
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
     }
 
     addPreviewCard(geminiResponse) {
@@ -2346,6 +2184,95 @@ Puedo ayudarte con:
             this.hideSiteDropdown();
         }
     }
+
+    // Función para renderizar Markdown básico
+    renderMarkdown(content) {
+        if (!content) return '';
+        
+        let formatted = content;
+        
+        // Procesar bloques de código
+        formatted = formatted.replace(/```(\w+)?\n?([\s\S]*?)```/g, (match, language, code) => {
+            const lang = language || 'text';
+            const cleanCode = code.trim();
+            const codeId = 'code_' + Math.random().toString(36).substr(2, 9);
+            const displayName = this.getLanguageDisplayName(lang);
+            
+            return `
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-language language-${lang}">${displayName}</span>
+                        <button class="copy-button" onclick="copyCodeToClipboard('${codeId}', this)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            Copiar código
+                        </button>
+                    </div>
+                    <pre class="code-content" id="${codeId}"><code class="language-${lang}">${this.escapeHtml(cleanCode)}</code></pre>
+                </div>
+            `;
+        });
+        
+        // Procesar encabezados
+        formatted = formatted
+            .replace(/^### (.*$)/gm, '<h3 class="response-h3">$1</h3>')
+            .replace(/^## (.*$)/gm, '<h2 class="response-h2">$1</h2>')
+            .replace(/^# (.*$)/gm, '<h1 class="response-h1">$1</h1>');
+        
+        // Procesar párrafos
+        formatted = formatted
+            .split('\n\n')
+            .map(paragraph => {
+                const trimmed = paragraph.trim();
+                if (trimmed && !trimmed.startsWith('<')) {
+                    return `<p class="response-paragraph">${trimmed}</p>`;
+                }
+                return trimmed;
+            })
+            .join('\n\n');
+        
+        // Procesar texto en negrita y cursiva
+        formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong class="text-highlight">$1</strong>');
+        formatted = formatted.replace(/\*(.*?)\*/g, '<em class="text-emphasis">$1</em>');
+        
+        // Procesar código inline
+        formatted = formatted.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+        
+        return formatted;
+    }
+
+    // Obtener nombre de display para el lenguaje
+    getLanguageDisplayName(lang) {
+        const languageNames = {
+            'js': 'JavaScript',
+            'javascript': 'JavaScript',
+            'php': 'PHP',
+            'html': 'HTML',
+            'css': 'CSS',
+            'bash': 'Bash',
+            'shell': 'Shell',
+            'sql': 'SQL',
+            'json': 'JSON',
+            'xml': 'XML',
+            'yaml': 'YAML',
+            'yml': 'YAML',
+            'python': 'Python',
+            'py': 'Python',
+            'text': 'Texto',
+            'txt': 'Texto'
+        };
+        
+        return languageNames[lang.toLowerCase()] || lang.toUpperCase();
+    }
+
+    // Escapar HTML
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
 }
 
 // Inicializar la aplicación cuando se carga la página
@@ -2380,7 +2307,8 @@ function copyCodeToClipboard(codeId, button) {
     const codeElement = document.getElementById(codeId);
     if (!codeElement) return;
     
-    const code = codeElement.textContent;
+    // Obtener el texto del código (sin el HTML de highlight.js)
+    const code = codeElement.textContent || codeElement.innerText;
     const originalText = button.innerHTML;
     
     navigator.clipboard.writeText(code).then(() => {
@@ -2403,22 +2331,31 @@ function copyCodeToClipboard(codeId, button) {
         // Fallback para navegadores más antiguos
         const textArea = document.createElement('textarea');
         textArea.value = code;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
         document.body.appendChild(textArea);
+        textArea.focus();
         textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
         
-        button.innerHTML = `
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20,6 9,17 4,12"></polyline>
-            </svg>
-            ¡Copiado!
-        `;
-        button.classList.add('copied');
-        
-        setTimeout(() => {
-            button.innerHTML = originalText;
-            button.classList.remove('copied');
-        }, 2000);
+        try {
+            document.execCommand('copy');
+            button.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20,6 9,17 4,12"></polyline>
+                </svg>
+                ¡Copiado!
+            `;
+            button.classList.add('copied');
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.classList.remove('copied');
+            }, 2000);
+        } catch (fallbackErr) {
+            console.error('Error en fallback de copia:', fallbackErr);
+        } finally {
+            document.body.removeChild(textArea);
+        }
     });
 }

@@ -7,6 +7,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Librerías para renderizado Markdown mejorado -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -627,17 +632,6 @@
             word-wrap: break-word;
         }
 
-        .code-block {
-            background-color: #1a1a1a;
-            border: 1px solid #404040;
-            border-radius: 8px;
-            padding: 12px;
-            margin: 12px 0;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            overflow-x: auto;
-        }
-
         .command-output {
             background-color: #1a1a1a;
             border-left: 4px solid #27ca3f;
@@ -991,24 +985,24 @@
             margin: 16px 0 10px 0;
         }
 
-        /* Bloques de código tipo ChatGPT */
+        /* Bloques de código tipo ChatGPT mejorados */
         .code-block {
-            background: #0f0f23;
-            border: 1px solid #2d2d2d;
+            background: #0d1117;
+            border: 1px solid #30363d;
             border-radius: 8px;
             margin: 16px 0;
             overflow: hidden;
             font-family: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
         }
 
         .code-header {
-            background: #1a1a2e;
-            padding: 8px 16px;
+            background: #161b22;
+            padding: 12px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #2d2d2d;
+            border-bottom: 1px solid #30363d;
             font-size: 12px;
         }
 
@@ -1018,13 +1012,46 @@
             text-transform: lowercase;
             font-size: 12px;
             letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .code-language::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #f85149;
+        }
+
+        .code-language.language-javascript::before,
+        .code-language.language-js::before {
+            background: #f7df1e;
+        }
+
+        .code-language.language-php::before {
+            background: #777bb4;
+        }
+
+        .code-language.language-css::before {
+            background: #1572b6;
+        }
+
+        .code-language.language-html::before {
+            background: #e34f26;
+        }
+
+        .code-language.language-bash::before,
+        .code-language.language-shell::before {
+            background: #4eaa25;
         }
 
         .copy-button {
             background: transparent;
             color: #8b949e;
             border: 1px solid #30363d;
-            padding: 6px 12px;
+            padding: 8px 12px;
             border-radius: 6px;
             font-size: 12px;
             cursor: pointer;
@@ -1033,12 +1060,14 @@
             align-items: center;
             gap: 6px;
             font-family: inherit;
+            font-weight: 500;
         }
 
         .copy-button:hover {
             background: #21262d;
             color: #f0f6fc;
             border-color: #8b949e;
+            transform: translateY(-1px);
         }
 
         .copy-button.copied {
@@ -1056,7 +1085,7 @@
             padding: 16px;
             margin: 0;
             overflow-x: auto;
-            background: #0f0f23;
+            background: #0d1117;
             color: #f8f8f2;
             font-size: 14px;
             line-height: 1.5;
@@ -1064,44 +1093,30 @@
             font-family: inherit;
         }
 
+        .code-content code {
+            background: none !important;
+            padding: 0 !important;
+            border-radius: 0 !important;
+            font-family: inherit;
+            font-size: inherit;
+            color: inherit;
+        }
+
         .code-content::-webkit-scrollbar {
             height: 8px;
         }
 
         .code-content::-webkit-scrollbar-track {
-            background: #1a1a2e;
+            background: #161b22;
         }
 
         .code-content::-webkit-scrollbar-thumb {
-            background: #404040;
+            background: #30363d;
             border-radius: 4px;
         }
 
         .code-content::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-
-        /* Syntax highlighting básico */
-        .language-css .code-content {
-            color: #f8f8f2;
-        }
-
-        .language-javascript .code-content,
-        .language-js .code-content {
-            color: #f8f8f2;
-        }
-
-        .language-html .code-content {
-            color: #f8f8f2;
-        }
-
-        .language-php .code-content {
-            color: #f8f8f2;
-        }
-
-        .language-bash .code-content,
-        .language-shell .code-content {
-            color: #50fa7b;
+            background: #484f58;
         }
 
         /* Listas tipo ChatGPT */
@@ -1170,10 +1185,12 @@
         .inline-code {
             background: #161b22;
             color: #f85149;
-            padding: 2px 6px;
+            padding: 3px 6px;
             border-radius: 4px;
             font-family: 'JetBrains Mono', 'Consolas', monospace;
             font-size: 13px;
+            border: 1px solid #30363d;
+        }
             border: 1px solid #30363d;
         }
 
@@ -1359,9 +1376,6 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
 
     <!-- Elementos ocultos para compatibilidad -->
     <select id="activeSiteSelect" style="display: none;"></select>
-
-    <script src="config.js"></script>
-    <script src="app.js"></script>
 </body>
 </html> 
                 transform: translateY(10px);
@@ -2381,6 +2395,16 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
         if (typeof CONFIG !== 'undefined') {
             console.log('🔧 CONFIG:', CONFIG);
         }
+        
+        // Inicializar highlight.js cuando esté disponible
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof hljs !== 'undefined') {
+                hljs.highlightAll();
+                console.log('✅ Highlight.js inicializado');
+            } else {
+                console.log('⚠️ Highlight.js no disponible, usando fallback');
+            }
+        });
     </script>
     <script src="app.js"></script>
 </body>
