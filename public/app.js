@@ -901,11 +901,38 @@ class GeminiWPCLI {
         
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
-        contentDiv.innerHTML = content;
+        
+        // Aplicar formato mejorado solo a mensajes del asistente
+        if (type === 'assistant') {
+            contentDiv.innerHTML = this.formatMessage(content);
+        } else {
+            contentDiv.innerHTML = content;
+        }
         
         messageDiv.appendChild(contentDiv);
         this.chatArea.appendChild(messageDiv);
         this.scrollToBottom();
+    }
+
+    // Función para mejorar el formato de mensajes del asistente
+    formatMessage(content) {
+        if (!content) return '';
+        
+        let formatted = content;
+        
+        // 1. Mejorar texto en negrita
+        formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong class="text-highlight">$1</strong>');
+        
+        // 2. Mejorar texto en cursiva
+        formatted = formatted.replace(/\*(.*?)\*/g, '<em class="text-emphasis">$1</em>');
+        
+        // 3. Mejorar código inline
+        formatted = formatted.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+        
+        // 4. Mejorar comandos WP-CLI
+        formatted = formatted.replace(/\b(wp\s+[a-zA-Z-]+(?:\s+[a-zA-Z-]+)*)/g, '<span class="wp-command">$1</span>');
+        
+        return formatted;
     }
 
     addPreviewCard(geminiResponse) {
