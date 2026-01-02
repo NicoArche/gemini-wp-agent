@@ -920,19 +920,152 @@ class GeminiWPCLI {
         
         let formatted = content;
         
-        // 1. Mejorar texto en negrita
+        // 1. Procesar bloques de código (```código```)
+        formatted = this.processCodeBlocks(formatted);
+        
+        // 2. Procesar encabezados (# ## ###)
+        formatted = this.processHeaders(formatted);
+        
+        // 3. Procesar listas numeradas (1. 2. 3.)
+        formatted = this.processNumberedLists(formatted);
+        
+        // 4. Procesar listas con viñetas (- * +)
+        formatted = this.processBulletLists(formatted);
+        
+        // 5. Procesar párrafos (separar por líneas vacías)
+        formatted = this.processParagraphs(formatted);
+        
+        // 6. Mejorar texto en negrita
         formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong class="text-highlight">$1</strong>');
         
-        // 2. Mejorar texto en cursiva
+        // 7. Mejorar texto en cursiva
         formatted = formatted.replace(/\*(.*?)\*/g, '<em class="text-emphasis">$1</em>');
         
-        // 3. Mejorar código inline
+        // 8. Mejorar código inline
         formatted = formatted.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
         
-        // 4. Mejorar comandos WP-CLI
+        // 9. Mejorar comandos WP-CLI
         formatted = formatted.replace(/\b(wp\s+[a-zA-Z-]+(?:\s+[a-zA-Z-]+)*)/g, '<span class="wp-command">$1</span>');
         
         return formatted;
+    }
+
+    // Procesar bloques de código
+    processCodeBlocks(content) {
+        return content.replace(/```(\w+)?\n?([\s\S]*?)```/g, (match, language, code) => {
+            const lang = language || 'text';
+            const cleanCode = code.trim();
+            return `
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-language">${lang.toUpperCase()}</span>
+                        <button class="copy-button" onclick="navigator.clipboard.writeText(\`${cleanCode.replace(/`/g, '\\`')}\`)">📋 Copiar</button>
+                    </div>
+                    <pre class="code-content"><code>${this.escapeHtml(cleanCode)}</code></pre>
+                </div>
+            `;
+        });
+    }
+
+    // Procesar encabezados
+    processHeaders(content) {
+        return content
+            .replace(/^### (.*$)/gm, '<h3 class="response-h3">$1</h3>')
+            .replace(/^## (.*$)/gm, '<h2 class="response-h2">$1</h2>')
+            .replace(/^# (.*$)/gm, '<h1 class="response-h1">$1</h1>');
+    }
+
+    // Procesar listas numeradas
+    processNumberedLists(content) {
+        const lines = content.split('\n');
+        const result = [];
+        let inList = false;
+        let listItems = [];
+
+        for (const line of lines) {
+            const match = line.match(/^(\d+)\.\s+(.*)$/);
+            if (match) {
+                if (!inList) {
+                    inList = true;
+                    listItems = [];
+                }
+                listItems.push(match[2]);
+            } else {
+                if (inList) {
+                    result.push('<ol class="numbered-list">' + 
+                        listItems.map(item => `<li class="list-item">${item}</li>`).join('') + 
+                        '</ol>');
+                    inList = false;
+                    listItems = [];
+                }
+                result.push(line);
+            }
+        }
+
+        if (inList) {
+            result.push('<ol class="numbered-list">' + 
+                listItems.map(item => `<li class="list-item">${item}</li>`).join('') + 
+                '</ol>');
+        }
+
+        return result.join('\n');
+    }
+
+    // Procesar listas con viñetas
+    processBulletLists(content) {
+        const lines = content.split('\n');
+        const result = [];
+        let inList = false;
+        let listItems = [];
+
+        for (const line of lines) {
+            const match = line.match(/^[-*+]\s+(.*)$/);
+            if (match) {
+                if (!inList) {
+                    inList = true;
+                    listItems = [];
+                }
+                listItems.push(match[1]);
+            } else {
+                if (inList) {
+                    result.push('<ul class="bullet-list">' + 
+                        listItems.map(item => `<li class="list-item">${item}</li>`).join('') + 
+                        '</ul>');
+                    inList = false;
+                    listItems = [];
+                }
+                result.push(line);
+            }
+        }
+
+        if (inList) {
+            result.push('<ul class="bullet-list">' + 
+                listItems.map(item => `<li class="list-item">${item}</li>`).join('') + 
+                '</ul>');
+        }
+
+        return result.join('\n');
+    }
+
+    // Procesar párrafos
+    processParagraphs(content) {
+        return content
+            .split('\n\n')
+            .map(paragraph => {
+                const trimmed = paragraph.trim();
+                if (trimmed && !trimmed.startsWith('<')) {
+                    return `<p class="response-paragraph">${trimmed}</p>`;
+                }
+                return trimmed;
+            })
+            .join('\n\n');
+    }
+
+    // Escapar HTML
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     addPreviewCard(geminiResponse) {
