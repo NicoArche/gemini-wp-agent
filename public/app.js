@@ -955,13 +955,21 @@ class GeminiWPCLI {
         return content.replace(/```(\w+)?\n?([\s\S]*?)```/g, (match, language, code) => {
             const lang = language || 'text';
             const cleanCode = code.trim();
+            const codeId = 'code_' + Math.random().toString(36).substr(2, 9);
+            
             return `
                 <div class="code-block">
                     <div class="code-header">
-                        <span class="code-language">${lang.toUpperCase()}</span>
-                        <button class="copy-button" onclick="navigator.clipboard.writeText(\`${cleanCode.replace(/`/g, '\\`')}\`)">📋 Copiar</button>
+                        <span class="code-language">${lang}</span>
+                        <button class="copy-button" onclick="copyCodeToClipboard('${codeId}', this)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            Copiar código
+                        </button>
                     </div>
-                    <pre class="code-content"><code>${this.escapeHtml(cleanCode)}</code></pre>
+                    <pre class="code-content" id="${codeId}"><code class="language-${lang}">${this.escapeHtml(cleanCode)}</code></pre>
                 </div>
             `;
         });
@@ -2366,3 +2374,51 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
+// Función global para copiar código al portapapeles
+function copyCodeToClipboard(codeId, button) {
+    const codeElement = document.getElementById(codeId);
+    if (!codeElement) return;
+    
+    const code = codeElement.textContent;
+    const originalText = button.innerHTML;
+    
+    navigator.clipboard.writeText(code).then(() => {
+        // Cambiar el botón temporalmente
+        button.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20,6 9,17 4,12"></polyline>
+            </svg>
+            ¡Copiado!
+        `;
+        button.classList.add('copied');
+        
+        // Restaurar después de 2 segundos
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.classList.remove('copied');
+        }, 2000);
+    }).catch(err => {
+        console.error('Error al copiar:', err);
+        // Fallback para navegadores más antiguos
+        const textArea = document.createElement('textarea');
+        textArea.value = code;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        button.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20,6 9,17 4,12"></polyline>
+            </svg>
+            ¡Copiado!
+        `;
+        button.classList.add('copied');
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.classList.remove('copied');
+        }, 2000);
+    });
+}

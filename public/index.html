@@ -993,53 +993,115 @@
 
         /* Bloques de código tipo ChatGPT */
         .code-block {
-            background: #0d1117;
-            border: 1px solid #30363d;
+            background: #0f0f23;
+            border: 1px solid #2d2d2d;
             border-radius: 8px;
             margin: 16px 0;
             overflow: hidden;
-            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-family: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
         .code-header {
-            background: #161b22;
+            background: #1a1a2e;
             padding: 8px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #30363d;
+            border-bottom: 1px solid #2d2d2d;
+            font-size: 12px;
         }
 
         .code-language {
-            font-size: 12px;
-            color: #7d8590;
+            color: #8b949e;
             font-weight: 600;
-            text-transform: uppercase;
+            text-transform: lowercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
         }
 
         .copy-button {
-            background: #238636;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
+            background: transparent;
+            color: #8b949e;
+            border: 1px solid #30363d;
+            padding: 6px 12px;
+            border-radius: 6px;
             font-size: 12px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
         }
 
         .copy-button:hover {
-            background: #2ea043;
+            background: #21262d;
+            color: #f0f6fc;
+            border-color: #8b949e;
+        }
+
+        .copy-button.copied {
+            background: #238636;
+            color: white;
+            border-color: #238636;
+        }
+
+        .copy-button svg {
+            width: 14px;
+            height: 14px;
         }
 
         .code-content {
             padding: 16px;
             margin: 0;
             overflow-x: auto;
-            background: #0d1117;
-            color: #e6edf3;
+            background: #0f0f23;
+            color: #f8f8f2;
             font-size: 14px;
             line-height: 1.5;
+            white-space: pre;
+            font-family: inherit;
+        }
+
+        .code-content::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .code-content::-webkit-scrollbar-track {
+            background: #1a1a2e;
+        }
+
+        .code-content::-webkit-scrollbar-thumb {
+            background: #404040;
+            border-radius: 4px;
+        }
+
+        .code-content::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Syntax highlighting básico */
+        .language-css .code-content {
+            color: #f8f8f2;
+        }
+
+        .language-javascript .code-content,
+        .language-js .code-content {
+            color: #f8f8f2;
+        }
+
+        .language-html .code-content {
+            color: #f8f8f2;
+        }
+
+        .language-php .code-content {
+            color: #f8f8f2;
+        }
+
+        .language-bash .code-content,
+        .language-shell .code-content {
+            color: #50fa7b;
         }
 
         /* Listas tipo ChatGPT */
