@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini WP-Agent - Asistente Conversacional WordPress</title>
+    <title>Typingpress – Your personal Gemini agent for WordPress</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     
-    <!-- Librerías para renderizado Markdown mejorado -->
+    <!-- Libraries for enhanced Markdown rendering -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css?v=3.1">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js?v=3.1"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js?v=3.1"></script>
     
-    <!-- Estilos críticos inline para evitar problemas de caché -->
+    <!-- Critical inline styles to avoid cache issues -->
     <style id="markdown-critical-styles">
-        /* ESTILOS CRÍTICOS PARA BLOQUES DE CÓDIGO - NO CACHEABLE */
+        /* CRITICAL STYLES FOR CODE BLOCKS - NOT CACHEABLE */
         .code-block {
             background: #0d1117 !important;
             border: 1px solid #30363d !important;
@@ -198,10 +198,12 @@
 
         body {
             font-family: 'JetBrains Mono', 'Courier New', monospace;
-            background-color: #1a1a1a;
-            color: #e0e0e0;
+            background-color: #212121;
+            color: #ececf1;
             height: 100vh;
             overflow: hidden;
+            font-size: 12px;
+            line-height: 1.4;
         }
 
         .app-container {
@@ -209,11 +211,11 @@
             height: 100vh;
         }
 
-        /* 🎨 BARRA LATERAL IZQUIERDA */
+        /* 🎨 LEFT SIDEBAR */
         .sidebar {
             width: 280px;
-            background-color: #2d2d2d;
-            border-right: 1px solid #404040;
+            background-color: #171717;
+            border-right: 1px solid #2f2f2f;
             display: flex;
             flex-direction: column;
             transition: transform 0.3s ease;
@@ -221,39 +223,39 @@
 
         .sidebar-header {
             padding: 20px;
-            border-bottom: 1px solid #404040;
+            border-bottom: 1px solid #2f2f2f;
         }
 
         .sidebar-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
-            color: #27ca3f;
-            margin-bottom: 8px;
+            color: #10a37f;
+            margin-bottom: 6px;
         }
 
         .sidebar-subtitle {
-            font-size: 12px;
-            color: #888;
+            font-size: 11px;
+            color: #8e8ea0;
         }
 
         .connected-site {
-            background-color: #1a1a1a;
-            border: 1px solid #404040;
+            background-color: #212121;
+            border: 1px solid #2f2f2f;
             border-radius: 8px;
             padding: 12px;
             margin-top: 12px;
         }
 
         .site-name {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
-            color: #e0e0e0;
+            color: #ececf1;
             margin-bottom: 4px;
         }
 
         .site-url {
             font-size: 11px;
-            color: #888;
+            color: #8e8ea0;
             word-break: break-all;
         }
 
@@ -266,12 +268,12 @@
         }
 
         .site-status.connected {
-            background-color: #27ca3f;
+            background-color: #10a37f;
             color: #000;
         }
 
         .site-status.disconnected {
-            background-color: #ff5f56;
+            background-color: #f5436c;
             color: #fff;
         }
 
@@ -286,7 +288,7 @@
 
         .action-group-title {
             font-size: 12px;
-            color: #888;
+            color: #8e8ea0;
             text-transform: uppercase;
             margin-bottom: 12px;
             font-weight: 500;
@@ -295,23 +297,23 @@
         .action-button {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             background: none;
-            border: 1px solid #404040;
+            border: 1px solid #2f2f2f;
             border-radius: 8px;
-            color: #e0e0e0;
+            color: #ececf1;
             font-family: inherit;
-            font-size: 13px;
+            font-size: 12px;
             cursor: pointer;
             transition: all 0.2s ease;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .action-button:hover {
-            background-color: #404040;
-            border-color: #555;
+            background-color: #2f2f2f;
+            border-color: #565869;
             transform: translateX(4px);
         }
 
@@ -326,8 +328,8 @@
         }
 
         .api-status {
-            background-color: #1a1a1a;
-            border: 1px solid #404040;
+            background-color: #212121;
+            border: 1px solid #2f2f2f;
             border-radius: 8px;
             padding: 12px;
             margin-top: 12px;
@@ -335,31 +337,232 @@
 
         .api-status-title {
             font-size: 12px;
-            color: #888;
+            color: #8e8ea0;
             margin-bottom: 6px;
         }
 
         .api-status-value {
             font-size: 11px;
-            color: #27ca3f;
+            color: #10a37f;
         }
 
         .api-status-value.free {
-            color: #ffbd2e;
+            color: #ff9500;
         }
 
-        /* 🎨 ÁREA PRINCIPAL DEL CHAT */
+        /* 🧠 Memory Status Styles */
+        .memory-status-title {
+            font-size: 12px;
+            color: #8e8ea0;
+            margin-bottom: 6px;
+        }
+
+        .memory-status-details {
+            font-size: 10px;
+            color: #10a37f;
+            margin-bottom: 8px;
+        }
+
+        .memory-status-details div {
+            margin-bottom: 2px;
+        }
+
+        .memory-clear-btn {
+            background: none;
+            border: 1px solid #2f2f2f;
+            color: #8e8ea0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .memory-clear-btn:hover {
+            border-color: #ff5f56;
+            color: #ff5f56;
+        }
+
+        /* 📝 CODE SNIPPETS STYLES */
+        .snippets-modal-content {
+            max-width: 900px;
+            width: 95%;
+            max-height: 90vh;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .snippets-section {
+            margin-bottom: 32px;
+        }
+
+        .snippets-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ececf1;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #2f2f2f;
+        }
+
+        .snippets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 16px;
+        }
+
+        .snippet-card {
+            background-color: #212121;
+            border: 1px solid #2f2f2f;
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .snippet-card:hover {
+            border-color: #565869;
+            transform: translateY(-2px);
+        }
+
+        .snippet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .snippet-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ececf1;
+        }
+
+        .snippet-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .snippet-action-btn {
+            background: none;
+            border: 1px solid #2f2f2f;
+            color: #8e8ea0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .snippet-action-btn.use-btn:hover {
+            border-color: #10a37f;
+            color: #10a37f;
+        }
+
+        .snippet-action-btn.delete-btn:hover {
+            border-color: #f5436c;
+            color: #f5436c;
+        }
+
+        .snippet-description {
+            font-size: 12px;
+            color: #8e8ea0;
+            margin-bottom: 12px;
+            font-style: italic;
+        }
+
+        .snippet-code {
+            background-color: #171717;
+            border: 1px solid #2f2f2f;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+            overflow-x: auto;
+        }
+
+        .snippet-code pre {
+            margin: 0;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #f8f8f2;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .snippet-code code {
+            background: none;
+            padding: 0;
+            border-radius: 0;
+            font-family: inherit;
+            font-size: inherit;
+            color: inherit;
+        }
+
+        .snippet-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #666;
+        }
+
+        .no-snippets {
+            text-align: center;
+            padding: 40px 20px;
+            color: #8e8ea0;
+        }
+
+        .no-snippets p {
+            margin-bottom: 8px;
+        }
+
+        .code-textarea {
+            min-height: 200px;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            resize: vertical;
+        }
+
+        /* Mobile responsiveness for snippets */
+        @media (max-width: 768px) {
+            .snippets-modal-content {
+                width: 95%;
+                margin: 10px;
+            }
+
+            .snippets-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .snippet-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .modal-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+        }
+
+        /* 🎨 MAIN CHAT AREA */
         .main-content {
             flex: 1;
             display: flex;
             flex-direction: column;
-            background-color: #1a1a1a;
+            background-color: #212121;
         }
 
         .chat-header {
-            background-color: #2d2d2d;
+            background-color: #171717;
             padding: 16px 24px;
-            border-bottom: 1px solid #404040;
+            border-bottom: 1px solid #2f2f2f;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -368,15 +571,15 @@
         .chat-title {
             font-size: 16px;
             font-weight: 500;
-            color: #e0e0e0;
+            color: #ececf1;
         }
 
         .active-site-indicator {
             display: flex;
             align-items: center;
             gap: 8px;
-            background-color: #1a1a1a;
-            border: 1px solid #404040;
+            background-color: #212121;
+            border: 1px solid #2f2f2f;
             border-radius: 8px;
             padding: 8px 12px;
             margin-left: auto;
@@ -385,13 +588,13 @@
 
         .site-indicator-label {
             font-size: 12px;
-            color: #888;
+            color: #8e8ea0;
         }
 
         .site-indicator-name {
             font-size: 13px;
             font-weight: 500;
-            color: #27ca3f;
+            color: #10a37f;
             max-width: 150px;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -401,7 +604,7 @@
         .site-selector-btn {
             background: none;
             border: none;
-            color: #888;
+            color: #8e8ea0;
             cursor: pointer;
             padding: 2px 4px;
             border-radius: 4px;
@@ -409,16 +612,16 @@
         }
 
         .site-selector-btn:hover {
-            background-color: #404040;
-            color: #e0e0e0;
+            background-color: #2f2f2f;
+            color: #ececf1;
         }
 
         .site-dropdown {
             position: absolute;
             top: 100%;
             right: 0;
-            background-color: #2d2d2d;
-            border: 1px solid #404040;
+            background-color: #171717;
+            border: 1px solid #2f2f2f;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             z-index: 1000;
@@ -447,9 +650,9 @@
 
         .site-dropdown-header {
             padding: 12px 16px;
-            border-bottom: 1px solid #404040;
+            border-bottom: 1px solid #2f2f2f;
             font-size: 12px;
-            color: #888;
+            color: #8e8ea0;
             text-transform: uppercase;
             font-weight: 500;
         }
@@ -458,7 +661,7 @@
             padding: 12px 16px;
             cursor: pointer;
             transition: background-color 0.2s ease;
-            border-bottom: 1px solid #333;
+            border-bottom: 1px solid #2a2a2a;
         }
 
         .site-dropdown-item:last-child {
@@ -466,24 +669,24 @@
         }
 
         .site-dropdown-item:hover {
-            background-color: #404040;
+            background-color: #2f2f2f;
         }
 
         .site-dropdown-item.active {
-            background-color: rgba(39, 202, 63, 0.1);
-            border-left: 3px solid #27ca3f;
+            background-color: rgba(16, 163, 127, 0.1);
+            border-left: 3px solid #10a37f;
         }
 
         .site-dropdown-name {
             font-size: 14px;
             font-weight: 500;
-            color: #e0e0e0;
+            color: #ececf1;
             margin-bottom: 2px;
         }
 
         .site-dropdown-url {
             font-size: 11px;
-            color: #888;
+            color: #8e8ea0;
             margin-bottom: 4px;
         }
 
@@ -495,13 +698,13 @@
         }
 
         .site-dropdown-status.connected {
-            background-color: rgba(39, 202, 63, 0.2);
-            color: #27ca3f;
+            background-color: rgba(16, 163, 127, 0.2);
+            color: #10a37f;
         }
 
         .site-dropdown-status.error {
-            background-color: rgba(255, 95, 86, 0.2);
-            color: #ff5f56;
+            background-color: rgba(245, 67, 108, 0.2);
+            color: #f5436c;
         }
 
         .site-dropdown-actions {
@@ -512,8 +715,8 @@
 
         .site-dropdown-action {
             background: none;
-            border: 1px solid #404040;
-            color: #888;
+            border: 1px solid #2f2f2f;
+            color: #8e8ea0;
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 10px;
@@ -522,23 +725,23 @@
         }
 
         .site-dropdown-action:hover {
-            border-color: #27ca3f;
-            color: #27ca3f;
+            border-color: #10a37f;
+            color: #10a37f;
         }
 
         .site-dropdown-action.delete:hover {
-            border-color: #ff5f56;
-            color: #ff5f56;
+            border-color: #f5436c;
+            color: #f5436c;
         }
 
         .site-dropdown-footer {
             padding: 12px 16px;
-            border-top: 1px solid #404040;
+            border-top: 1px solid #2f2f2f;
             text-align: center;
         }
 
         .add-site-btn {
-            background-color: #27ca3f;
+            background-color: #10a37f;
             color: #000;
             border: none;
             padding: 8px 16px;
@@ -550,11 +753,11 @@
         }
 
         .add-site-btn:hover {
-            background-color: #22b83a;
+            background-color: #0d8a6b;
             transform: translateY(-1px);
         }
 
-        /* 🎨 ESTILOS PARA SITIOS EN SIDEBAR */
+        /* 🎨 STYLES FOR SITES IN SIDEBAR */
         .saved-site-item {
             background-color: #1a1a1a;
             border: 1px solid #404040;
@@ -645,13 +848,13 @@
             flex: 1;
             overflow-y: auto;
             padding: 24px;
-            background-color: #1a1a1a;
+            background-color: #212121;
         }
 
         .input-area {
             padding: 20px 24px;
-            background-color: #2d2d2d;
-            border-top: 1px solid #404040;
+            background-color: #171717;
+            border-top: 1px solid #2f2f2f;
         }
 
         .input-container {
@@ -662,44 +865,45 @@
 
         .message-input {
             flex: 1;
-            background-color: #1a1a1a;
-            border: 1px solid #404040;
+            background-color: #2f2f2f;
+            border: 1px solid #565869;
             border-radius: 12px;
-            padding: 12px 16px;
-            color: #e0e0e0;
+            padding: 10px 14px;
+            color: #ececf1;
             font-family: inherit;
-            font-size: 14px;
+            font-size: 13px;
             resize: none;
-            min-height: 44px;
-            max-height: 120px;
+            min-height: 38px;
+            max-height: 100px;
             transition: border-color 0.2s ease;
+            line-height: 1.4;
         }
 
         .message-input:focus {
             outline: none;
-            border-color: #27ca3f;
+            border-color: #10a37f;
         }
 
         .message-input::placeholder {
-            color: #666;
+            color: #8e8ea0;
         }
 
         .send-button {
-            background-color: #27ca3f;
+            background-color: #10a37f;
             border: none;
             border-radius: 12px;
-            padding: 12px 16px;
+            padding: 10px 14px;
             color: #000;
             font-family: inherit;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
-            min-width: 80px;
+            min-width: 70px;
         }
 
         .send-button:hover {
-            background-color: #22b83a;
+            background-color: #0d8a6b;
             transform: translateY(-1px);
         }
 
@@ -708,13 +912,13 @@
         }
 
         .send-button:disabled {
-            background-color: #404040;
-            color: #666;
+            background-color: #2f2f2f;
+            color: #8e8ea0;
             cursor: not-allowed;
             transform: none;
         }
 
-        /* 🎨 MENSAJES DEL CHAT */
+        /* 🎨 CHAT MESSAGES */
         .message {
             margin-bottom: 24px;
             animation: fadeIn 0.3s ease-in;
@@ -771,12 +975,14 @@
         }
 
         .message-content {
-            background-color: #2d2d2d;
-            border: 1px solid #404040;
+            background-color: #171717;
+            border: 1px solid #2f2f2f;
             border-radius: 12px;
-            padding: 16px;
+            padding: 12px;
             margin-left: 32px;
             position: relative;
+            font-size: 13px;
+            line-height: 1.4;
         }
 
         .message-content::before {
@@ -788,7 +994,7 @@
             height: 0;
             border-top: 8px solid transparent;
             border-bottom: 8px solid transparent;
-            border-right: 8px solid #404040;
+            border-right: 8px solid #2f2f2f;
         }
 
         .message-content::after {
@@ -800,7 +1006,7 @@
             height: 0;
             border-top: 8px solid transparent;
             border-bottom: 8px solid transparent;
-            border-right: 8px solid #2d2d2d;
+            border-right: 8px solid #171717;
         }
 
         .message-text {
@@ -810,8 +1016,8 @@
         }
 
         .command-output {
-            background-color: #1a1a1a;
-            border-left: 4px solid #27ca3f;
+            background-color: #212121;
+            border-left: 4px solid #10a37f;
             padding: 12px;
             margin: 12px 0;
             font-family: 'JetBrains Mono', monospace;
@@ -820,8 +1026,8 @@
         }
 
         .error-output {
-            background-color: #2d1a1a;
-            border-left: 4px solid #ff5f56;
+            background-color: #2a1a1a;
+            border-left: 4px solid #f5436c;
             padding: 12px;
             margin: 12px 0;
             font-family: 'JetBrains Mono', monospace;
@@ -829,7 +1035,7 @@
             border-radius: 0 8px 8px 0;
         }
 
-        /* 🎨 MODAL DE CONFIGURACIÓN */
+        /* 🎨 CONFIGURATION MODAL */
         .modal {
             display: none;
             position: fixed;
@@ -855,8 +1061,8 @@
         }
 
         .modal-content {
-            background-color: #2d2d2d;
-            border: 1px solid #404040;
+            background-color: #171717;
+            border: 1px solid #2f2f2f;
             border-radius: 16px;
             padding: 32px;
             max-width: 500px;
@@ -914,17 +1120,17 @@
             display: block;
             font-size: 13px;
             font-weight: 500;
-            color: #e0e0e0;
+            color: #ececf1;
             margin-bottom: 8px;
         }
 
         .form-input {
             width: 100%;
-            background-color: #1a1a1a;
-            border: 1px solid #404040;
+            background-color: #212121;
+            border: 1px solid #2f2f2f;
             border-radius: 8px;
             padding: 12px;
-            color: #e0e0e0;
+            color: #ececf1;
             font-family: inherit;
             font-size: 14px;
             transition: border-color 0.2s ease;
@@ -932,16 +1138,16 @@
 
         .form-input:focus {
             outline: none;
-            border-color: #27ca3f;
+            border-color: #10a37f;
         }
 
         .form-input::placeholder {
-            color: #666;
+            color: #8e8ea0;
         }
 
         .form-description {
             font-size: 11px;
-            color: #888;
+            color: #8e8ea0;
             margin-top: 4px;
             line-height: 1.4;
         }
@@ -965,22 +1171,22 @@
         }
 
         .btn-primary {
-            background-color: #27ca3f;
+            background-color: #10a37f;
             color: #000;
         }
 
         .btn-primary:hover {
-            background-color: #22b83a;
+            background-color: #0d8a6b;
             transform: translateY(-1px);
         }
 
         .btn-secondary {
-            background-color: #404040;
-            color: #e0e0e0;
+            background-color: #2f2f2f;
+            color: #ececf1;
         }
 
         .btn-secondary:hover {
-            background-color: #555;
+            background-color: #565869;
         }
 
         .config-status {
@@ -992,15 +1198,15 @@
         }
 
         .config-status.success {
-            background-color: rgba(39, 202, 63, 0.1);
-            border: 1px solid #27ca3f;
-            color: #27ca3f;
+            background-color: rgba(16, 163, 127, 0.1);
+            border: 1px solid #10a37f;
+            color: #10a37f;
         }
 
         .config-status.error {
-            background-color: rgba(255, 95, 86, 0.1);
-            border: 1px solid #ff5f56;
-            color: #ff5f56;
+            background-color: rgba(245, 67, 108, 0.1);
+            border: 1px solid #f5436c;
+            color: #f5436c;
         }
 
         /* 🎨 RESPONSIVE DESIGN */
@@ -1073,16 +1279,16 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: #1a1a1a;
+            background: #212121;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #404040;
+            background: #2f2f2f;
             border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #555;
+            background: #565869;
         }
 
         /* 🎨 LOADING STATES */
@@ -1095,9 +1301,72 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #888;
+            color: #8e8ea0;
             font-size: 13px;
             margin: 16px 0;
+            padding: 16px;
+            background-color: #171717;
+            border: 1px solid #2f2f2f;
+            border-radius: 12px;
+            margin-left: 32px;
+            position: relative;
+            animation: fadeIn 0.3s ease-in, pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                border-color: #2f2f2f;
+                box-shadow: 0 0 0 0 rgba(16, 163, 127, 0);
+            }
+            50% { 
+                border-color: rgba(16, 163, 127, 0.3);
+                box-shadow: 0 0 0 4px rgba(16, 163, 127, 0.1);
+            }
+        }
+
+        .typing-indicator::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 16px;
+            width: 0;
+            height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-right: 8px solid #2f2f2f;
+        }
+
+        .typing-indicator::after {
+            content: '';
+            position: absolute;
+            left: -7px;
+            top: 16px;
+            width: 0;
+            height: 0;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+            border-right: 8px solid #171717;
+        }
+
+        .typing-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #10a37f;
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .typing-text {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
         }
 
         .typing-dots {
@@ -1108,9 +1377,25 @@
         .typing-dot {
             width: 6px;
             height: 6px;
-            background-color: #888;
+            background-color: #10a37f;
             border-radius: 50%;
-            animation: typingBounce 1.4s infinite ease-in-out;
+            animation: typingBounce 1.4s ease-in-out infinite;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        .typing-dot:nth-child(3) { animation-delay: 0s; }
+
+        @keyframes typingBounce {
+            0%, 80%, 100% { 
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% { 
+                transform: scale(1);
+                opacity: 1;
+            }
+        }4s infinite ease-in-out;
         }
 
         .typing-dot:nth-child(1) { animation-delay: -0.32s; }
@@ -1392,54 +1677,65 @@
         <!-- 🎨 BARRA LATERAL IZQUIERDA -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <div class="sidebar-title">Gemini WP-Agent</div>
-                <div class="sidebar-subtitle">Asistente Conversacional</div>
+                <div class="sidebar-title">Typingpress</div>
+                <div class="sidebar-subtitle">Your personal Gemini agent for WordPress</div>
                 
                 <div class="connected-site" id="connectedSiteInfo" style="display: none;">
-                    <div class="site-name" id="currentSiteName">Sin sitio conectado</div>
+                    <div class="site-name" id="currentSiteName">No site connected</div>
                     <div class="site-url" id="currentSiteUrl"></div>
-                    <span class="site-status disconnected" id="currentSiteStatus">Desconectado</span>
+                    <span class="site-status disconnected" id="currentSiteStatus">Disconnected</span>
                 </div>
 
                 <div class="api-status">
-                    <div class="api-status-title">Estado API</div>
-                    <div class="api-status-value free" id="apiStatusValue">Consultas gratuitas (50/hora)</div>
+                    <div class="api-status-title">API Status</div>
+                    <div class="api-status-value free" id="apiStatusValue">Free queries (50/hour)</div>
+                </div>
+
+                <!-- 🧠 Session Memory Status -->
+                <div class="api-status" id="memoryStatus">
+                    <div class="api-status-title">Session Memory</div>
+                    <div class="api-status-value">Loading...</div>
                 </div>
             </div>
 
             <div class="sidebar-actions">
                 <div class="action-group">
-                    <div class="action-group-title">Configuración</div>
+                    <div class="action-group-title">Configuration</div>
                     <button class="action-button" id="globalApiKeyButton">
                         <span class="action-icon">🔑</span>
-                        <span>API Key Global</span>
+                        <span>Global API Key</span>
                     </button>
                 </div>
 
                 <div class="action-group">
-                    <div class="action-group-title">Herramientas</div>
+                    <div class="action-group-title">Tools</div>
                     <button class="action-button" id="autodiagnosisButton">
                         <span class="action-icon">🔍</span>
-                        <span>Autodiagnóstico</span>
+                        <span>Auto-diagnosis</span>
                     </button>
                     <button class="action-button" id="cleanupButton">
                         <span class="action-icon">🧹</span>
-                        <span>Limpieza y Optimización</span>
+                        <span>Cleanup & Optimization</span>
                     </button>
                     <button class="action-button" id="clearHistoryButton">
                         <span class="action-icon">🗑️</span>
-                        <span>Limpiar Conversación</span>
+                        <span>Clear Conversation</span>
+                    </button>
+                    <!-- 📝 Code Snippets Button -->
+                    <button class="action-button" id="codeSnippetsButton">
+                        <span class="action-icon">📝</span>
+                        <span>Code Snippets</span>
                     </button>
                 </div>
 
                 <div class="action-group">
-                    <div class="action-group-title">Sitios Conectados</div>
+                    <div class="action-group-title">Connected Sites</div>
                     <div id="savedSitesList">
-                        <!-- Los sitios se cargarán dinámicamente -->
+                        <!-- Sites will be loaded dynamically -->
                     </div>
                     <button class="action-button" id="configButton">
                         <span class="action-icon">➕</span>
-                        <span>Añadir Nuevo Sitio</span>
+                        <span>Add New Site</span>
                     </button>
                 </div>
             </div>
@@ -1449,48 +1745,48 @@
         <div class="main-content">
             <div class="chat-header">
                 <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
-                <div class="chat-title">Chat con Gemini WP-Agent</div>
+                <div class="chat-title">Chat with Typingpress</div>
                 <div class="active-site-indicator" id="activeSiteIndicator" style="display: none;">
-                    <span class="site-indicator-label">Trabajando en:</span>
-                    <span class="site-indicator-name" id="activeSiteName">Sin sitio</span>
-                    <button class="site-selector-btn" id="siteSelectorBtn" title="Cambiar sitio">
+                    <span class="site-indicator-label">Working on:</span>
+                    <span class="site-indicator-name" id="activeSiteName">No site</span>
+                    <button class="site-selector-btn" id="siteSelectorBtn" title="Change site">
                         <span>▼</span>
                     </button>
                     
-                    <!-- Desplegable de sitios -->
+                    <!-- Sites dropdown -->
                     <div class="site-dropdown" id="siteDropdown">
-                        <div class="site-dropdown-header">Sitios Conectados</div>
+                        <div class="site-dropdown-header">Connected Sites</div>
                         <div id="siteDropdownList">
-                            <!-- Se llena dinámicamente -->
+                            <!-- Filled dynamically -->
                         </div>
                         <div class="site-dropdown-footer">
                             <button class="add-site-btn" id="addSiteFromDropdown">
-                                ➕ Añadir Sitio
+                                ➕ Add Site
                             </button>
                         </div>
                     </div>
                 </div>
-                <div class="chat-subtitle" id="chatSubtitle">Listo para ayudarte</div>
+                <div class="chat-subtitle" id="chatSubtitle">Ready to help you</div>
             </div>
 
             <div class="chat-area" id="chatArea">
                 <div class="message">
                     <div class="message-header">
                         <div class="message-avatar assistant">🤖</div>
-                        <div class="message-author">Gemini WP-Agent</div>
-                        <div class="message-time">Ahora</div>
+                        <div class="message-author">Typingpress</div>
+                        <div class="message-time">Now</div>
                     </div>
                     <div class="message-content">
-                        <div class="message-text">¡Hola! Soy Gemini WP-Agent, tu asistente conversacional especializado en WordPress. 
+                        <div class="message-text">Hello! I'm Typingpress, your personal Gemini agent for WordPress. 
 
-Puedo ayudarte con:
-🔧 Gestionar tu sitio WordPress (plugins, temas, usuarios, contenido)
-🎨 Generar código CSS, JavaScript, PHP personalizado
-💬 Responder preguntas sobre desarrollo web
-📝 Crear contenido con bloques de Gutenberg
-🗄️ Optimizar y mantener tu base de datos
+I can help you with:
+🔧 Managing your WordPress site (plugins, themes, users, content)
+🎨 Generating custom CSS, JavaScript, PHP code
+💬 Answering web development questions
+📝 Creating content with Gutenberg blocks
+🗄️ Optimizing and maintaining your database
 
-Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra lateral, o simplemente pregúntame algo. ¡Estoy aquí para ayudarte!</div>
+To get started, configure your WordPress site using the ⚙️ button in the sidebar, or just ask me something. I'm here to help!</div>
                     </div>
                 </div>
             </div>
@@ -1500,50 +1796,50 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
                     <textarea 
                         class="message-input" 
                         id="messageInput" 
-                        placeholder="Escribe tu mensaje aquí... (Ej: 'Lista los plugins', 'Dame CSS para el menú', '¿Cómo optimizar WordPress?')"
+                        placeholder="Type your message here... (e.g., 'List plugins', 'Give me CSS for the menu', 'How to optimize WordPress?')"
                         rows="1"></textarea>
-                    <button class="send-button" id="sendButton">Enviar</button>
+                    <button class="send-button" id="sendButton">Send</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 🎨 MODAL DE CONFIGURACIÓN -->
+    <!-- 🎨 CONFIGURATION MODAL -->
     <div class="modal" id="configModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">Configurar WordPress</h2>
+                <h2 class="modal-title">Configure WordPress</h2>
                 <button class="modal-close" id="configCloseButton">&times;</button>
             </div>
             
             <form id="configForm">
                 <div class="form-group">
-                    <label class="form-label" for="siteName">Nombre del Sitio *</label>
-                    <input type="text" class="form-input" id="siteName" placeholder="Mi Sitio WordPress" required>
-                    <div class="form-description">Un nombre descriptivo para identificar tu sitio</div>
+                    <label class="form-label" for="siteName">Site Name *</label>
+                    <input type="text" class="form-input" id="siteName" placeholder="My WordPress Site" required>
+                    <div class="form-description">A descriptive name to identify your site</div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="wordpressUrl">URL de WordPress *</label>
-                    <input type="url" class="form-input" id="wordpressUrl" placeholder="https://misitio.com" required>
-                    <div class="form-description">La URL completa de tu sitio WordPress</div>
+                    <label class="form-label" for="wordpressUrl">WordPress URL *</label>
+                    <input type="url" class="form-input" id="wordpressUrl" placeholder="https://mysite.com" required>
+                    <div class="form-description">The complete URL of your WordPress site</div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="authToken">Token de Seguridad *</label>
+                    <label class="form-label" for="authToken">Security Token *</label>
                     <input type="text" class="form-input" id="authToken" placeholder="abc123def456..." required>
-                    <div class="form-description">Token generado por el plugin Gemini WP-CLI Bridge</div>
+                    <div class="form-description">Token generated by the Gemini WP-CLI Bridge plugin</div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="globalGeminiApiKey">API Key de Google Gemini (Opcional)</label>
+                    <label class="form-label" for="globalGeminiApiKey">Google Gemini API Key (Optional)</label>
                     <input type="text" class="form-input" id="globalGeminiApiKey" placeholder="AIza...">
-                    <div class="form-description">Si usas tu propia API Key, tendrás consultas ilimitadas. Esta configuración se aplicará a todos tus sitios.</div>
+                    <div class="form-description">If you use your own API Key, you'll have unlimited queries. This setting will apply to all your sites.</div>
                 </div>
 
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" id="configCancelButton">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Configuración</button>
+                    <button type="button" class="btn btn-secondary" id="configCancelButton">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Configuration</button>
                 </div>
 
                 <div class="config-status" id="configStatus" style="display: none;"></div>
@@ -1551,7 +1847,7 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
         </div>
     </div>
 
-    <!-- Elementos ocultos para compatibilidad -->
+    <!-- Hidden elements for compatibility -->
     <select id="activeSiteSelect" style="display: none;"></select>
 </body>
 </html> 
@@ -1650,6 +1946,587 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
         .preview-card.conversational {
             border-left: 4px solid #00bcd4;
             background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
+        }
+
+        .preview-card.function-call {
+            border-left: 4px solid #4caf50;
+            background: linear-gradient(135deg, #1a2e1a 0%, #252525 100%);
+        }
+
+        .preview-card.function-call-pending {
+            border-left: 4px solid #ff9800;
+            background: linear-gradient(135deg, #2e1a1a 0%, #252525 100%);
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+        }
+
+        .preview-card.function-call-executed {
+            border-left: 4px solid #4caf50;
+            background: linear-gradient(135deg, #1a2e1a 0%, #252525 100%);
+        }
+
+        .ability-name {
+            font-family: 'JetBrains Mono', monospace;
+            background: #2d4a2d;
+            color: #4caf50;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .ability-description {
+            color: #b0b0b0;
+            font-size: 13px;
+            font-style: italic;
+        }
+
+        .ability-parameters {
+            background: #1e1e1e;
+            border: 1px solid #404040;
+            border-radius: 4px;
+            padding: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #e0e0e0;
+        }
+
+        .impact-warning {
+            background: #4a2d2d;
+            color: #ffab40;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #ff9800;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .confirmation-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            justify-content: center;
+        }
+
+        .confirm-ability-button {
+            background: linear-gradient(135deg, #10a37f, #0d8a6b);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(16, 163, 127, 0.3);
+        }
+
+        .confirm-ability-button:hover {
+            background: linear-gradient(135deg, #0d8a6b, #10a37f);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 163, 127, 0.4);
+        }
+
+        .confirm-ability-button:disabled {
+            background: #2f2f2f;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .cancel-ability-button {
+            background: linear-gradient(135deg, #f5436c, #d73754);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(245, 67, 108, 0.3);
+        }
+
+        .cancel-ability-button:hover {
+            background: linear-gradient(135deg, #d73754, #f5436c);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 67, 108, 0.4);
+        }
+
+        .cancel-ability-button:disabled {
+            background: #2f2f2f;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 🧪 DRY-RUN & EXPLAINABILITY STYLES */
+        .simulate-ability-button {
+            background: linear-gradient(135deg, #ff9500, #e6850e);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+        
+        .simulate-ability-button:hover {
+            background: linear-gradient(135deg, #e6850e, #cc7a0d);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3);
+        }
+        
+        .simulate-again-button {
+            background: linear-gradient(135deg, #007acc, #0066b3);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+        
+        .simulate-again-button:hover {
+            background: linear-gradient(135deg, #0066b3, #005299);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 122, 204, 0.3);
+        }
+        
+        .execute-after-simulation-button {
+            background: linear-gradient(135deg, #10a37f, #0d8a6b);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+        
+        .execute-after-simulation-button:hover {
+            background: linear-gradient(135deg, #0d8a6b, #0a7357);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 163, 127, 0.3);
+        }
+        
+        .cancel-after-simulation-button {
+            background: linear-gradient(135deg, #f5436c, #d73754);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .cancel-after-simulation-button:hover {
+            background: linear-gradient(135deg, #d73754, #c12e47);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 67, 108, 0.3);
+        }
+        
+        .simulation-result-display {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border: 2px solid #f39c12;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .simulation-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .simulation-header h3 {
+            color: #f39c12;
+            margin: 0 0 10px 0;
+        }
+        
+        .simulation-badge {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .impact-analysis {
+            margin: 20px 0;
+        }
+        
+        .impact-section {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .impact-section h4 {
+            color: #2c3e50;
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        
+        .risk-assessment {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .risk-level {
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        
+        .risk-level.risk-read {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .risk-level.risk-write {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .risk-level.risk-destructive {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .risk-level.risk-unknown {
+            background: #e2e3e5;
+            color: #383d41;
+            border: 1px solid #d6d8db;
+        }
+        
+        .resources-affected {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .resource-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 3px solid #6c757d;
+        }
+        
+        .resource-item.risk-low {
+            border-left-color: #28a745;
+        }
+        
+        .resource-item.risk-medium {
+            border-left-color: #ffc107;
+        }
+        
+        .resource-item.risk-high {
+            border-left-color: #dc3545;
+        }
+        
+        .risk-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .risk-badge.risk-low {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .risk-badge.risk-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .risk-badge.risk-high {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .reversibility {
+            padding: 12px;
+            border-radius: 6px;
+        }
+        
+        .reversibility.reversible {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .reversibility.not-reversible {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .reversibility-reason {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        .reversibility-recommendation {
+            margin-top: 8px;
+            padding: 8px;
+            background: rgba(255, 193, 7, 0.1);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .recommendations {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .recommendation-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .priority-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .priority-badge.priority-high {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .priority-badge.priority-medium {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .priority-badge.priority-low {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .simulation-data {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        .simulation-note {
+            background: rgba(52, 152, 219, 0.1);
+            border-left: 3px solid #3498db;
+            padding: 8px 12px;
+            margin: 8px 0;
+            border-radius: 4px;
+            font-style: italic;
+        }
+        
+        .simulation-actions {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .simulation-actions h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .simulation-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .explainability-info {
+            background: linear-gradient(135deg, #e8f4fd, #d1ecf1);
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 15px;
+            line-height: 1.6;
+        }
+        
+        .confirmation-note {
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(23, 162, 184, 0.1);
+            border-radius: 6px;
+            border: 1px solid rgba(23, 162, 184, 0.2);
+        }
+        
+        .simulation-error {
+            background: linear-gradient(135deg, #f8d7da, #f1aeb5);
+            border: 2px solid #dc3545;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .simulation-error .error-header {
+            font-weight: 600;
+            color: #721c24;
+            margin-bottom: 8px;
+        }
+        
+        .simulation-error .error-content {
+            color: #721c24;
+            margin-bottom: 8px;
+        }
+        
+        .simulation-error .error-suggestion {
+            color: #856404;
+            font-style: italic;
+        }
+
+        .ability-execution-result {
+            background: #1a2e1a;
+            border: 1px solid #4caf50;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 12px 0;
+        }
+
+        .ability-execution-result .result-header {
+            color: #4caf50;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .ability-execution-result .result-content {
+            background: #1e1e1e;
+            border-radius: 4px;
+            padding: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: #e0e0e0;
+            margin: 8px 0;
+        }
+
+        .ability-execution-result .result-meta {
+            color: #888;
+            font-size: 12px;
+            text-align: right;
+        }
+
+        .ability-execution-error {
+            background: #2e1a1a;
+            border: 1px solid #f44336;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 12px 0;
+        }
+
+        .ability-execution-error .error-header {
+            color: #f44336;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .ability-execution-error .error-content {
+            background: #1e1e1e;
+            border-radius: 4px;
+            padding: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: #ffab40;
+            margin: 8px 0;
+        }
+
+        .ability-execution-cancelled {
+            background: #2e2e1a;
+            border: 1px solid #ff9800;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 12px 0;
+        }
+
+        .ability-execution-cancelled .cancel-header {
+            color: #ff9800;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .ability-execution-cancelled .cancel-content {
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+
+        .function-name {
+            font-family: 'JetBrains Mono', monospace;
+            background: #2d4a2d;
+            color: #4caf50;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .function-result {
+            background: #1e1e1e;
+            border: 1px solid #404040;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            color: #e0e0e0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .function-result pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .execution-method {
+            background: #2d4a2d;
+            color: #4caf50;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .error-message {
+            background: #4a2d2d;
+            color: #f44336;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            border-left: 3px solid #f44336;
         }
 
         .preview-section {
@@ -1879,9 +2756,9 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
             display: inline-block;
             width: 16px;
             height: 16px;
-            border: 2px solid #404040;
+            border: 2px solid #2f2f2f;
             border-radius: 50%;
-            border-top-color: #00ff88;
+            border-top-color: #10a37f;
             animation: spin 1s ease-in-out infinite;
         }
 
@@ -1952,7 +2829,7 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
 
         /* Degradado animado para botones de carga */
         .loading-gradient {
-            background: linear-gradient(45deg, #4285f4, #9c27b0, #00bcd4, #4285f4);
+            background: linear-gradient(45deg, #10a37f, #007acc, #ff9500, #10a37f);
             background-size: 300% 300%;
             animation: gradientMove 2s ease infinite;
         }
@@ -1962,7 +2839,887 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-
+        
+        /* 🤖 POLICY ENGINE: Estilos para sugerencias de políticas */
+        .policy-suggestions-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0;
+            color: white;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+        }
+        
+        .policy-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .policy-icon {
+            font-size: 20px;
+            margin-right: 8px;
+        }
+        
+        .policy-title {
+            font-size: 14px;
+            font-weight: bold;
+            flex-grow: 1;
+        }
+        
+        .policy-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .policy-principle {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-style: italic;
+            text-align: center;
+            border-left: 4px solid #ffd700;
+            font-size: 11px;
+        }
+        
+        .policy-suggestions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .policy-suggestion-card {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            border-radius: 10px;
+            padding: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .policy-suggestion-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+        }
+        
+        .policy-suggestion-card[data-priority="high"] {
+            border-left: 5px solid #ff5f56;
+        }
+        
+        .policy-suggestion-card[data-priority="medium"] {
+            border-left: 5px solid #ffbd2e;
+        }
+        
+        .policy-suggestion-card[data-priority="low"] {
+            border-left: 5px solid #27ca3f;
+        }
+        
+        .suggestion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .suggestion-priority {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: bold;
+            font-size: 10px;
+            padding: 3px 6px;
+            border-radius: 12px;
+            background: #f0f0f0;
+        }
+        
+        .suggestion-category {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 3px 6px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+        
+        .suggestion-risk {
+            font-size: 10px;
+            font-weight: bold;
+            padding: 3px 6px;
+            border-radius: 12px;
+            background: #f5f5f5;
+        }
+        
+        .suggestion-title {
+            font-size: 13px;
+            font-weight: bold;
+            margin: 0 0 6px 0;
+            color: #2c3e50;
+        }
+        
+        .suggestion-description {
+            color: #555;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            font-size: 11px;
+        }
+        
+        .suggestion-details {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 11px;
+        }
+        
+        .detail-section {
+            margin-bottom: 10px;
+        }
+        
+        .detail-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .detail-section strong {
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        .detail-section p {
+            margin: 0;
+            color: #555;
+            line-height: 1.4;
+        }
+        
+        .detail-section ul {
+            margin: 4px 0 0 16px;
+            color: #555;
+        }
+        
+        .detail-section li {
+            margin-bottom: 2px;
+        }
+        
+        .suggestion-ability {
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border-left: 3px solid #27ca3f;
+        }
+        
+        .suggestion-ability strong {
+            color: #2c3e50;
+        }
+        
+        .suggestion-ability code {
+            background: #fff;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+        }
+        
+        .ability-parameters {
+            margin-top: 6px;
+        }
+        
+        .ability-parameters pre {
+            background: #fff;
+            padding: 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            overflow-x: auto;
+            border: 1px solid #ddd;
+        }
+        
+        .suggestion-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .policy-action-button {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        
+        .policy-action-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .policy-action-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .policy-action-button.simulate {
+            background: #ff9500;
+            color: white;
+        }
+        
+        .policy-action-button.simulate:hover {
+            background: #e6850e;
+        }
+        
+        .policy-action-button.execute {
+            background: #10a37f;
+            color: white;
+        }
+        
+        .policy-action-button.execute:hover {
+            background: #0d8a6b;
+        }
+        
+        .policy-action-button.dismiss {
+            background: #8e8ea0;
+            color: white;
+        }
+        
+        .policy-action-button.dismiss:hover {
+            background: #6c6c7c;
+        }
+        
+        .suggestion-timestamp {
+            text-align: right;
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #eee;
+        }
+        
+        .suggestion-timestamp small {
+            color: #888;
+            font-size: 10px;
+        }
+        
+        .policy-footer {
+            text-align: center;
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .policy-footer small {
+            color: rgba(255, 255, 255, 0.8);
+            font-style: italic;
+            font-size: 11px;
+        }
+        
+        /* 🔄 WORKFLOW ENGINE: Estilos para workflows */
+        .workflow-suggestions-container {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0;
+            color: white;
+            box-shadow: 0 8px 32px rgba(79, 172, 254, 0.3);
+        }
+        
+        .workflow-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .workflow-icon {
+            font-size: 20px;
+            margin-right: 8px;
+        }
+        
+        .workflow-title {
+            font-size: 15px;
+            font-weight: bold;
+            flex-grow: 1;
+        }
+        
+        .workflow-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .workflow-principle {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-style: italic;
+            text-align: center;
+            border-left: 4px solid #00f2fe;
+            font-size: 11px;
+        }
+        
+        .workflow-suggestions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .workflow-suggestion-card {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            border-radius: 10px;
+            padding: 16px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .workflow-suggestion-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+        }
+        
+        .workflow-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .workflow-name {
+            font-size: 15px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .workflow-confidence {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 3px 6px;
+            border-radius: 12px;
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .workflow-risk {
+            font-size: 11px;
+            font-weight: bold;
+            padding: 3px 6px;
+            border-radius: 12px;
+            background: #f5f5f5;
+        }
+        
+        .workflow-description {
+            margin-bottom: 12px;
+        }
+        
+        .workflow-description p {
+            color: #555;
+            line-height: 1.5;
+            margin: 0;
+            font-size: 12px;
+        }
+        
+        .workflow-details {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .workflow-meta {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .workflow-meta > div {
+            font-size: 12px;
+        }
+        
+        .workflow-meta strong {
+            color: #2c3e50;
+        }
+        
+        .workflow-reason {
+            margin-bottom: 12px;
+        }
+        
+        .workflow-reason strong {
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        .workflow-reason p {
+            margin: 0;
+            color: #555;
+            font-size: 11px;
+        }
+        
+        .workflow-steps-preview {
+            margin-bottom: 12px;
+        }
+        
+        .workflow-steps-preview strong {
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 6px;
+        }
+        
+        .workflow-steps-preview ol {
+            margin: 0;
+            padding-left: 16px;
+        }
+        
+        .workflow-steps-preview li {
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+        }
+        
+        .step-name {
+            flex-grow: 1;
+        }
+        
+        .step-risk {
+            font-size: 9px;
+            padding: 2px 5px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        
+        .step-risk.read {
+            background: #e8f5e8;
+            color: #27ca3f;
+        }
+        
+        .step-risk.write {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .step-risk.destructive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .workflow-prerequisites {
+            background: #fff3cd;
+            padding: 8px;
+            border-radius: 6px;
+            border-left: 3px solid #ffc107;
+        }
+        
+        .workflow-prerequisites strong {
+            color: #856404;
+        }
+        
+        .workflow-prerequisites ul {
+            margin: 4px 0 0 16px;
+            color: #856404;
+        }
+        
+        .workflow-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        
+        .workflow-action-button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .workflow-action-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .workflow-action-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .workflow-action-button.start {
+            background: #10a37f;
+            color: white;
+        }
+        
+        .workflow-action-button.start:hover {
+            background: #0d8a6b;
+        }
+        
+        .workflow-action-button.info {
+            background: #007acc;
+            color: white;
+        }
+        
+        .workflow-action-button.info:hover {
+            background: #0066b3;
+        }
+        
+        .workflow-timestamp {
+            text-align: right;
+            padding-top: 8px;
+            border-top: 1px solid #eee;
+        }
+        
+        .workflow-timestamp small {
+            color: #888;
+            font-size: 10px;
+        }
+        
+        .workflow-footer {
+            text-align: center;
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .workflow-footer small {
+            color: rgba(255, 255, 255, 0.8);
+            font-style: italic;
+            font-size: 11px;
+        }
+        
+        /* 🔄 WORKFLOW SESSION: Estilos para sesiones activas */
+        .workflow-session-container {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0;
+            border: 2px solid #4facfe;
+        }
+        
+        .workflow-session-header {
+            margin-bottom: 16px;
+        }
+        
+        .session-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .session-icon {
+            font-size: 20px;
+        }
+        
+        .session-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+            flex-grow: 1;
+        }
+        
+        .session-status {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .session-status.started {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .session-status.completed {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        .session-status.cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .session-progress {
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            text-align: center;
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .workflow-session-description {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .session-meta {
+            display: flex;
+            gap: 16px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+            font-size: 11px;
+            color: #6c757d;
+        }
+        
+        .workflow-steps-checklist {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .workflow-steps-checklist h4 {
+            margin: 0 0 12px 0;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        
+        .workflow-step {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            padding: 12px;
+            transition: all 0.2s ease;
+        }
+        
+        .workflow-step:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .step-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .step-number {
+            background: #4facfe;
+            color: white;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        
+        .step-info {
+            flex-grow: 1;
+        }
+        
+        .step-name {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 4px;
+            font-size: 13px;
+        }
+        
+        .step-description {
+            color: #6c757d;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .step-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: flex-end;
+        }
+        
+        .step-time {
+            font-size: 11px;
+            color: #6c757d;
+        }
+        
+        .step-required {
+            background: #fff3cd;
+            color: #856404;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 9px;
+            font-weight: bold;
+        }
+        
+        .step-optional {
+            background: #e2e3e5;
+            color: #6c757d;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 9px;
+            font-weight: bold;
+        }
+        
+        .step-status {
+            margin-bottom: 8px;
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 6px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .status-indicator.pending {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+        
+        .status-indicator.simulated {
+            background: #cff4fc;
+            color: #055160;
+        }
+        
+        .status-indicator.completed {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+        
+        .status-indicator.skipped {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .step-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        
+        .step-action-button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .step-action-button:hover {
+            transform: translateY(-1px);
+        }
+        
+        .step-action-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .step-action-button.simulate {
+            background: #ff9500;
+            color: white;
+        }
+        
+        .step-action-button.execute {
+            background: #10a37f;
+            color: white;
+        }
+        
+        .step-action-button.skip {
+            background: #8e8ea0;
+            color: white;
+        }
+        
+        .workflow-session-controls {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+        
+        .workflow-control-button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 12px;
+        }
+        
+        .workflow-control-button.cancel {
+            background: #f5436c;
+            color: white;
+        }
+        
+        .workflow-control-button.pause {
+            background: #ff9500;
+            color: #212529;
+        }
+        
+        .workflow-session-footer {
+            text-align: center;
+            padding-top: 12px;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .workflow-session-footer small {
+            color: #6c757d;
+            font-style: italic;
+            font-size: 11px;
+        }
+        
         .error-message {
             background-color: #ff5f56;
             color: white;
@@ -2013,18 +3770,18 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
         }
 
         /* Colores para diferentes tipos de contenido */
-        .highlight-error { color: #ff5f56; font-weight: bold; }
-        .highlight-success { color: #27ca3f; font-weight: bold; }
-        .highlight-warning { color: #ffbd2e; font-weight: bold; }
-        .highlight-info { color: #00bcd4; font-weight: bold; }
+        .highlight-error { color: #f5436c; font-weight: bold; }
+        .highlight-success { color: #10a37f; font-weight: bold; }
+        .highlight-warning { color: #ff9500; font-weight: bold; }
+        .highlight-info { color: #007acc; font-weight: bold; }
         .highlight-version { color: #9c27b0; font-weight: 500; }
-        .highlight-active { color: #27ca3f; }
-        .highlight-inactive { color: #ff5f56; }
-        .highlight-number { color: #4285f4; }
-        .highlight-string { color: #00ff88; }
-        .highlight-keyword { color: #ffbd2e; font-weight: 500; }
-        .highlight-comment { color: #888; font-style: italic; }
-        .highlight-url { color: #00bcd4; text-decoration: underline; }
+        .highlight-active { color: #10a37f; }
+        .highlight-inactive { color: #f5436c; }
+        .highlight-number { color: #007acc; }
+        .highlight-string { color: #10a37f; }
+        .highlight-keyword { color: #ff9500; font-weight: 500; }
+        .highlight-comment { color: #8e8ea0; font-style: italic; }
+        .highlight-url { color: #007acc; text-decoration: underline; }
         .highlight-path { color: #9c27b0; }
         .highlight-status { 
             padding: 2px 6px; 
@@ -2032,8 +3789,8 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
             font-size: 12px;
             font-weight: 500;
         }
-        .highlight-status.active { background: rgba(39, 202, 63, 0.2); color: #27ca3f; }
-        .highlight-status.inactive { background: rgba(255, 95, 86, 0.2); color: #ff5f56; }
+        .highlight-status.active { background: rgba(16, 163, 127, 0.2); color: #10a37f; }
+        .highlight-status.inactive { background: rgba(245, 67, 108, 0.2); color: #f5436c; }
 
         /* Tabla mejorada para listados */
         .output-table {
@@ -2073,23 +3830,23 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
         }
 
         .status-indicator.success {
-            background: rgba(39, 202, 63, 0.2);
-            color: #27ca3f;
+            background: rgba(16, 163, 127, 0.2);
+            color: #10a37f;
         }
 
         .status-indicator.error {
-            background: rgba(255, 95, 86, 0.2);
-            color: #ff5f56;
+            background: rgba(245, 67, 108, 0.2);
+            color: #f5436c;
         }
 
         .status-indicator.warning {
-            background: rgba(255, 189, 46, 0.2);
-            color: #ffbd2e;
+            background: rgba(255, 149, 0, 0.2);
+            color: #ff9500;
         }
 
         .status-indicator.info {
-            background: rgba(0, 188, 212, 0.2);
-            color: #00bcd4;
+            background: rgba(0, 122, 204, 0.2);
+            color: #007acc;
         }
 
         /* Scrollbar personalizado */
@@ -2100,18 +3857,18 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
 
         .chat-area::-webkit-scrollbar-track,
         .command-output::-webkit-scrollbar-track {
-            background: #2d2d2d;
+            background: #171717;
         }
 
         .chat-area::-webkit-scrollbar-thumb,
         .command-output::-webkit-scrollbar-thumb {
-            background: #404040;
+            background: #2f2f2f;
             border-radius: 4px;
         }
 
         .chat-area::-webkit-scrollbar-thumb:hover,
         .command-output::-webkit-scrollbar-thumb:hover {
-            background: #555;
+            background: #565869;
         }
 
         /* Modal de configuración */
@@ -2267,12 +4024,12 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .config-title {
             color: #00ff88;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 500;
         }
 
@@ -2280,7 +4037,7 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
             background: none;
             border: none;
             color: #e0e0e0;
-            font-size: 20px;
+            font-size: 18px;
             cursor: pointer;
             padding: 4px;
             border-radius: 4px;
@@ -2295,18 +4052,18 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
         .config-form {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
         }
 
         .config-field {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 5px;
         }
 
         .config-label {
             color: #e0e0e0;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
         }
 
@@ -2314,10 +4071,10 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
             background-color: #1a1a1a;
             border: 1px solid #404040;
             border-radius: 6px;
-            padding: 10px 12px;
+            padding: 9px 11px;
             color: #e0e0e0;
             font-family: inherit;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .config-input:focus {
@@ -2327,28 +4084,29 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
         }
 
         .config-help {
-            font-size: 12px;
+            font-size: 11px;
             color: #888;
-            margin-top: 4px;
+            margin-top: 3px;
         }
 
         .config-actions {
             display: flex;
-            gap: 12px;
-            margin-top: 20px;
+            gap: 10px;
+            margin-top: 16px;
         }
 
         .config-save {
             background-color: #00ff88;
             color: #1a1a1a;
             border: none;
-            padding: 10px 20px;
+            padding: 9px 18px;
             border-radius: 6px;
             font-family: inherit;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
             flex: 1;
+            font-size: 13px;
         }
 
         .config-save:hover {
@@ -2360,12 +4118,13 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
             background-color: #404040;
             color: #e0e0e0;
             border: none;
-            padding: 10px 20px;
+            padding: 9px 18px;
             border-radius: 6px;
             font-family: inherit;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
+            font-size: 13px;
         }
 
         .config-cancel:hover {
@@ -2373,10 +4132,10 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
         }
 
         .config-status {
-            margin-top: 12px;
-            padding: 8px 12px;
+            margin-top: 10px;
+            padding: 7px 10px;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 11px;
             text-align: center;
         }
 
@@ -2426,15 +4185,15 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
                 <div class="dot yellow"></div>
                 <div class="dot green"></div>
             </div>
-            <div class="terminal-title">Gemini WP-Agent - Diagnóstico Inteligente WordPress</div>
+            <div class="terminal-title">Typingpress – Intelligent WordPress Diagnostics</div>
             <div class="terminal-controls">
-                <button onclick="window.geminiApp?.clearHistory()" class="config-button" title="Limpiar Historial de Conversación" style="margin-right: 8px;">
+                <button onclick="window.geminiApp?.clearHistory()" class="config-button" title="Clear Conversation History" style="margin-right: 8px;">
                     🧠
                 </button>
-                <button onclick="window.geminiApp?.runManualDiagnosis()" class="config-button" title="Ejecutar Autodiagnóstico" style="margin-right: 8px;">
+                <button onclick="window.geminiApp?.runManualDiagnosis()" class="config-button" title="Run Auto-diagnosis" style="margin-right: 8px;">
                     🔍
                 </button>
-                <button id="configButton" class="config-button" title="Configuración">
+                <button id="configButton" class="config-button" title="Configuration">
                     ⚙️
                 </button>
             </div>
@@ -2443,25 +4202,25 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
         <div class="chat-area" id="chatArea">
             <div class="message assistant">
                 <div class="message-content">
-                    <strong>🤖 Gemini WP-Agent iniciado</strong><br><br>
-                    ¡Hola! Soy <strong>Gemini WP-Agent</strong>, tu experto en DevOps para WordPress. Uso IA avanzada para diagnosticar y resolver problemas de tu sitio.<br><br>
-                    <strong>Primeros pasos:</strong><br>
-                    1. Haz clic en ⚙️ para gestionar tus sitios WordPress<br>
-                    2. Añade un nuevo sitio con su URL y token<br>
-                    3. <strong>Autodiagnóstico automático</strong> se ejecutará al conectar<br>
-                    4. ¡Cuéntame tus problemas para resolverlos!<br><br>
-                    <strong>🔧 Puedo ayudarte con problemas como:</strong><br>
-                    • "Mi sitio está muy lento"<br>
-                    • "Tengo un error 500"<br>
-                    • "No puedo entrar al admin"<br>
-                    • "Creo que me hackearon"<br><br>
-                    <strong>📋 También comandos normales:</strong><br>
-                    • "Lista todos los plugins"<br>
-                    • "Muestra los usuarios"<br>
-                    • "Información del servidor"<br><br>
-                    <em>🧠 Powered by Gemini AI - Analizo tu problema y sugiero la mejor solución.</em><br>
-                    <em>🔍 Autodiagnóstico inteligente para máxima compatibilidad.</em><br>
-                    <em>💾 Tus sitios se guardan por 30 días automáticamente.</em>
+                    <strong>🤖 Typingpress started</strong><br><br>
+                    Hello! I'm <strong>Typingpress</strong>, your personal Gemini agent for WordPress. I use advanced AI to diagnose and solve your site's problems.<br><br>
+                    <strong>First steps:</strong><br>
+                    1. Click ⚙️ to manage your WordPress sites<br>
+                    2. Add a new site with its URL and token<br>
+                    3. <strong>Automatic auto-diagnosis</strong> will run when connecting<br>
+                    4. Tell me your problems so I can solve them!<br><br>
+                    <strong>🔧 I can help you with problems like:</strong><br>
+                    • "My site is very slow"<br>
+                    • "I have a 500 error"<br>
+                    • "I can't access the admin"<br>
+                    • "I think I was hacked"<br><br>
+                    <strong>📋 Also normal commands:</strong><br>
+                    • "List all plugins"<br>
+                    • "Show users"<br>
+                    • "Server information"<br><br>
+                    <em>🧠 Powered by Gemini AI - I analyze your problem and suggest the best solution.</em><br>
+                    <em>🔍 Intelligent auto-diagnosis for maximum compatibility.</em><br>
+                    <em>💾 Your sites are automatically saved for 30 days.</em>
                 </div>
             </div>
         </div>
@@ -2472,12 +4231,12 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
                     <textarea 
                         id="messageInput" 
                         class="input-field" 
-                        placeholder="Cuéntame tu problema o solicitud... Ej: 'Mi sitio está lento', 'Error 500', 'Lista los plugins'"
+                        placeholder="Tell me your problem or request... E.g: 'My site is slow', '500 error', 'List plugins'"
                         rows="1"
                     ></textarea>
                 </div>
                 <button id="sendButton" class="send-button">
-                    Enviar
+                    Send
                 </button>
             </div>
         </div>
@@ -2487,17 +4246,17 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
     <div id="configModal" class="config-modal">
         <div class="config-content">
             <div class="config-header">
-                <div class="config-title">⚙️ Configuración de Sitios WordPress</div>
+                <div class="config-title">⚙️ WordPress Sites Configuration</div>
                 <button id="configCloseButton" class="config-close">✕</button>
             </div>
             
             <!-- Selector de sitio activo -->
             <div class="config-field">
-                <label class="config-label">Sitio Activo</label>
+                <label class="config-label">Active Site</label>
                 <select id="activeSiteSelect" class="config-input">
-                    <option value="">Seleccionar sitio...</option>
+                    <option value="">Select site...</option>
                 </select>
-                <div class="config-help">Selecciona el sitio WordPress que quieres usar</div>
+                <div class="config-help">Select the WordPress site you want to use</div>
             </div>
 
             <!-- Lista de sitios guardados -->
@@ -2506,34 +4265,34 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
             </div>
             
             <form id="configForm" class="config-form">
-                <h3 style="color: #00ff88; margin: 20px 0 10px 0;">➕ Añadir Nuevo Sitio</h3>
+                <h3 style="color: #10a37f; margin: 20px 0 10px 0;">➕ Add New Site</h3>
                 
                 <div class="config-field">
-                    <label class="config-label" for="siteName">Nombre del Sitio</label>
+                    <label class="config-label" for="siteName">Site Name</label>
                     <input 
                         type="text" 
                         id="siteName" 
                         class="config-input" 
-                        placeholder="Mi Sitio WordPress"
+                        placeholder="My WordPress Site"
                         required
                     >
-                    <div class="config-help">Nombre descriptivo para identificar este sitio</div>
+                    <div class="config-help">Descriptive name to identify this site</div>
                 </div>
 
                 <div class="config-field">
-                    <label class="config-label" for="wordpressUrl">URL de WordPress</label>
+                    <label class="config-label" for="wordpressUrl">WordPress URL</label>
                     <input 
                         type="url" 
                         id="wordpressUrl" 
                         class="config-input" 
-                        placeholder="https://mi-sitio.com"
+                        placeholder="https://my-site.com"
                         required
                     >
-                    <div class="config-help">URL completa de tu sitio WordPress (sin /wp-json al final)</div>
+                    <div class="config-help">Complete URL of your WordPress site (without /wp-json at the end)</div>
                 </div>
 
                 <div class="config-field">
-                    <label class="config-label" for="authToken">Token de Seguridad</label>
+                    <label class="config-label" for="authToken">Security Token</label>
                     <input 
                         type="text" 
                         id="authToken" 
@@ -2541,23 +4300,23 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
                         placeholder="HACKATHON_GEMINI_2025_SECURE_KEY"
                         required
                     >
-                    <div class="config-help">Debe coincidir con el token configurado en el plugin de WordPress</div>
+                    <div class="config-help">Must match the token configured in the WordPress plugin</div>
                 </div>
 
                 <div class="config-field">
-                    <label class="config-label" for="geminiApiKey">Google Gemini API Key (Opcional)</label>
+                    <label class="config-label" for="geminiApiKey">Google Gemini API Key (Optional)</label>
                     <input 
                         type="text" 
                         id="geminiApiKey" 
                         class="config-input" 
                         placeholder="AIzaSy..."
                     >
-                    <div class="config-help">Si usas tu propia llave, no tendrás límites de uso</div>
+                    <div class="config-help">If you use your own key, you won't have usage limits</div>
                 </div>
 
                 <div class="config-actions">
-                    <button type="button" id="configCancelButton" class="config-cancel">Cancelar</button>
-                    <button type="submit" class="config-save">Añadir Sitio</button>
+                    <button type="button" id="configCancelButton" class="config-cancel">Cancel</button>
+                    <button type="submit" class="config-save">Add Site</button>
                 </div>
 
                 <div id="configStatus" class="config-status" style="display: none;"></div>
@@ -2588,5 +4347,70 @@ Para comenzar, configura tu sitio WordPress usando el botón ⚙️ en la barra 
         });
     </script>
     <script src="app.js?v=3.4&t=1735848100"></script>
+
+    <!-- 📝 CODE SNIPPETS MODALS -->
+    
+    <!-- Snippets List Modal -->
+    <div class="modal" id="snippetsModal">
+        <div class="modal-content snippets-modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">📝 Code Snippets</h2>
+                <div class="modal-actions">
+                    <button class="btn btn-primary" onclick="window.geminiApp.showCreateSnippetModal()">
+                        + New Snippet
+                    </button>
+                    <button class="modal-close" onclick="window.geminiApp.hideCodeSnippetsModal()">×</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div id="snippetsList">
+                    <!-- Snippets will be loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Snippet Modal -->
+    <div class="modal" id="createSnippetModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">📝 Create Code Snippet</h2>
+                <button class="modal-close" onclick="window.geminiApp.hideCreateSnippetModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="createSnippetForm" onsubmit="event.preventDefault(); window.geminiApp.handleCreateSnippet();">
+                    <div class="form-group">
+                        <label class="form-label" for="snippetName">Snippet Name *</label>
+                        <input type="text" id="snippetName" class="form-input" placeholder="e.g., Custom Login Function" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="snippetType">Code Type *</label>
+                        <select id="snippetType" class="form-input" required>
+                            <option value="php">🐘 PHP</option>
+                            <option value="css">🎨 CSS</option>
+                            <option value="js">⚡ JavaScript</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="snippetDescription">Description (optional)</label>
+                        <input type="text" id="snippetDescription" class="form-input" placeholder="Brief description of what this code does">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="snippetCode">Code Content *</label>
+                        <textarea id="snippetCode" class="form-input code-textarea" placeholder="Paste your code here..." required></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="window.geminiApp.hideCreateSnippetModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create Snippet</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

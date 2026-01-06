@@ -1,28 +1,28 @@
-// Configuración de la aplicación Gemini WP-CLI Terminal
+// Gemini WP-CLI Terminal application configuration
 const CONFIG = {
-    // URL del servidor proxy (cambia esto según tu despliegue)
+    // Proxy server URL (change this according to your deployment)
     SERVER_URL: 'http://localhost:3001',
     
-    // URLs por defecto (se pueden cambiar desde la configuración)
+    // Default URLs (can be changed from configuration)
     DEFAULT_WORDPRESS_URL: 'https://nicoarche.com',
     DEFAULT_AUTH_TOKEN: 'HACKATHON_GEMINI_2025_SECURE_KEY',
     
-    // Configuración de la interfaz
+    // Interface configuration
     UI: {
         TERMINAL_TITLE: 'Gemini WP-CLI Terminal - Hackathon 2025',
         WELCOME_MESSAGE: `
             <strong>🤖 Gemini WP-CLI Terminal iniciado</strong><br><br>
-            Hola! Soy tu asistente para WordPress. Puedes pedirme que ejecute comandos WP-CLI de forma segura.<br><br>
-            <strong>Primeros pasos:</strong><br>
-            1. Haz clic en ⚙️ para configurar tu sitio WordPress<br>
-            2. Ingresa la URL y token de seguridad<br>
-            3. ¡Empieza a usar comandos!<br><br>
-            <strong>Ejemplos:</strong><br>
-            • "Lista todos los plugins instalados"<br>
-            • "Muestra la versión de WordPress"<br>
-            • "Obtén información de los usuarios"<br>
-            • "Verifica el estado de la base de datos"<br><br>
-            <em>Todos los comandos serán revisados antes de ejecutarse.</em>
+            Hello! I'm your WordPress assistant. You can ask me to execute WP-CLI commands safely.<br><br>
+            <strong>Getting started:</strong><br>
+            1. Click ⚙️ to configure your WordPress site<br>
+            2. Enter the URL and security token<br>
+            3. Start using commands!<br><br>
+            <strong>Examples:</strong><br>
+            • "List all installed plugins"<br>
+            • "Show WordPress version"<br>
+            • "Get user information"<br>
+            • "Check database status"<br><br>
+            <em>All commands will be reviewed before execution.</em>
         `,
         AUTO_SCROLL: true,
         ANIMATION_DURATION: 300
@@ -32,7 +32,7 @@ const CONFIG = {
     COMMAND_MAPPINGS: {
         'lista.*plugin': {
             command: 'wp plugin list',
-            explanation: 'Voy a listar todos los plugins instalados en WordPress, mostrando su estado (activo/inactivo) y versión.',
+            explanation: 'I will list all plugins installed in WordPress, showing their status (active/inactive) and version.',
             is_safe: true
         },
         'versión.*wordpress|wordpress.*versión': {
@@ -47,12 +47,12 @@ const CONFIG = {
         },
         'post.*lista|lista.*post|entradas': {
             command: 'wp post list',
-            explanation: 'Voy a mostrar una lista de las publicaciones más recientes con su estado y fecha.',
+            explanation: 'I will show a list of the most recent posts with their status and date.',
             is_safe: true
         },
         'tema.*lista|lista.*tema': {
             command: 'wp theme list',
-            explanation: 'Voy a listar todos los temas instalados y mostrar cuál está activo actualmente.',
+            explanation: 'I will list all installed themes and show which one is currently active.',
             is_safe: true
         },
         'base.*datos.*tamaño|tamaño.*base.*datos': {
@@ -67,7 +67,7 @@ const CONFIG = {
         },
         'información.*servidor|servidor.*info': {
             command: 'wp --version',
-            explanation: 'Voy a mostrar información del servidor y capacidades disponibles.',
+            explanation: 'I will show server information and available capabilities.',
             is_safe: true,
             use_server_info: true
         }
@@ -84,13 +84,14 @@ const CONFIG = {
         'config'
     ],
     
-    // Configuración de la API
+    // API configuration
     API: {
         TIMEOUT: 30000, // 30 segundos
         RETRY_ATTEMPTS: 3,
         ENDPOINTS: {
             EXECUTE: '/api/wp-cli/execute',
             TEST: '/api/wp-cli/test',
+            CHECK_API: '/api/wp-cli/check-api',  // 🔍 NUEVO ENDPOINT PARA DIAGNÓSTICO
             SERVER_INFO: '/api/wp-cli/server-info',
             HEALTH: '/api/health',
             GEMINI_ASK: '/api/gemini/ask'  // 🧠 NUEVO ENDPOINT
@@ -98,7 +99,7 @@ const CONFIG = {
     }
 };
 
-// Exportar configuración para uso en otros archivos
+// Export configuration for use in other files
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = CONFIG;
 }

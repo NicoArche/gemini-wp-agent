@@ -1,11 +1,11 @@
 ﻿// 🚀 VERSIÓN 3.4 - DETECCIÓN DE CÓDIGO SIN TRIPLE BACKTICKS IMPLEMENTADA
-console.log('🔥 APP.JS v3.4 CARGADO - DETECTA CÓDIGO GEMINI SIN BACKTICKS 🔥');
+console.log('🔥 APP.JS v3.4 LOADED - DETECTS GEMINI CODE WITHOUT BACKTICKS 🔥');
 
 class GeminiWPCLI {
     constructor() {
-        console.log('🔧 Inicializando constructor...');
+        console.log('🔧 Initializing constructor...');
         
-        // Verificar elementos del DOM
+        // Verify DOM elements
         this.chatArea = document.getElementById('chatArea');
         this.messageInput = document.getElementById('messageInput');
         this.sendButton = document.getElementById('sendButton');
@@ -17,7 +17,7 @@ class GeminiWPCLI {
         this.activeSiteSelect = document.getElementById('activeSiteSelect');
         this.savedSitesList = document.getElementById('savedSitesList');
         
-        // Debug: verificar que todos los elementos existen
+        // Debug: verify that all elements exist
         const elements = {
             chatArea: this.chatArea,
             messageInput: this.messageInput,
@@ -31,9 +31,9 @@ class GeminiWPCLI {
             savedSitesList: this.savedSitesList
         };
         
-        console.log('🔍 Elementos del DOM:', elements);
+        console.log('🔍 DOM Elements:', elements);
         
-        // Verificar elementos críticos
+        // Verify critical elements
         const missingElements = [];
         Object.entries(elements).forEach(([name, element]) => {
             if (!element) {
@@ -42,53 +42,62 @@ class GeminiWPCLI {
         });
         
         if (missingElements.length > 0) {
-            console.error('❌ Elementos faltantes:', missingElements);
-            throw new Error(`Elementos del DOM faltantes: ${missingElements.join(', ')}`);
+            console.error('❌ Missing elements:', missingElements);
+            throw new Error(`Missing DOM elements: ${missingElements.join(', ')}`);
         }
         
-        console.log('✅ Todos los elementos del DOM encontrados');
+        console.log('✅ All DOM elements found');
         
-        // Usar configuración base
+        // Use base configuration
         this.config = CONFIG;
-        console.log('📋 Configuración cargada:', this.config);
+        console.log('📋 Configuration loaded:', this.config);
         
-        // Configuración actual del sitio activo
+        // Current active site configuration
         this.currentSite = null;
         
-        // Estado del servidor y capacidades
+        // Server status and capabilities
         this.serverCapabilities = null;
         this.emulationMode = false;
         
-        // 🧠 Memoria a corto plazo: últimos 5 mensajes
-        this.chatHistory = [];
+        // 🧠 Enhanced session memory system
+        this.sessionMemory = {
+            chatHistory: [],
+            siteContext: null,
+            executedActions: [],
+            sessionStartTime: new Date().toISOString(),
+            lastActivity: new Date().toISOString()
+        };
         
-        // 🔑 API Key global de Gemini (nueva funcionalidad)
+        // 📝 Code snippets system (v0.1)
+        this.codeSnippets = this.loadCodeSnippets();
+        
+        // 🔑 Global Gemini API Key (new functionality)
         this.globalGeminiApiKey = this.loadGlobalGeminiApiKey();
         
-        // Cargar sitios guardados
-        console.log('💾 Cargando sitios guardados...');
+        // Load saved sites
+        console.log('💾 Loading saved sites...');
         this.loadSavedSites();
         
-        console.log('🎧 Inicializando event listeners...');
+        console.log('🎧 Initializing event listeners...');
         this.initializeEventListeners();
         
-        console.log('📏 Configurando textarea...');
+        console.log('📏 Configuring textarea...');
         this.autoResizeTextarea();
         
-        console.log('🌐 Verificando conexión del servidor...');
+        console.log('🌐 Checking server connection...');
         this.checkServerConnection();
         
-        console.log('🎉 Constructor completado exitosamente');
+        console.log('🎉 Constructor completed successfully');
     }
 
     // 🔑 Gestión de API Key global de Gemini
     loadGlobalGeminiApiKey() {
         try {
             const apiKey = localStorage.getItem('gemini_global_api_key');
-            console.log('🔑 API Key global cargada:', apiKey ? 'Sí (oculta por seguridad)' : 'No');
+            console.log('🔑 Global API Key loaded:', apiKey ? 'Yes (hidden for security)' : 'No');
             return apiKey || '';
         } catch (error) {
-            console.error('❌ Error cargando API Key global:', error);
+            console.error('❌ Error loading global API Key:', error);
             return '';
         }
     }
@@ -97,14 +106,14 @@ class GeminiWPCLI {
         try {
             if (apiKey && apiKey.trim()) {
                 localStorage.setItem('gemini_global_api_key', apiKey.trim());
-                console.log('✅ API Key global guardada');
+                console.log('✅ Global API Key saved');
             } else {
                 localStorage.removeItem('gemini_global_api_key');
-                console.log('🗑️ API Key global eliminada');
+                console.log('🗑️ Global API Key deleted');
             }
             this.globalGeminiApiKey = apiKey.trim();
         } catch (error) {
-            console.error('❌ Error guardando API Key global:', error);
+            console.error('❌ Error saving global API Key:', error);
         }
     }
 
@@ -112,72 +121,183 @@ class GeminiWPCLI {
         return this.globalGeminiApiKey && this.globalGeminiApiKey.length > 0;
     }
 
-    // 🧠 Gestión de memoria a corto plazo
-    addToHistory(role, message, geminiResponse = null) {
-        const historyEntry = {
-            role: role, // 'user' o 'assistant'
+    // 🧠 Enhanced session memory management
+    addToSessionMemory(role, message, additionalData = {}) {
+        const memoryEntry = {
+            role: role, // 'user', 'assistant', 'system'
             message: message,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            sessionTime: Date.now() - new Date(this.sessionMemory.sessionStartTime).getTime(),
+            ...additionalData
         };
         
-        // Si es respuesta de Gemini, añadir datos estructurados
-        if (role === 'assistant' && geminiResponse) {
-            historyEntry.gemini_data = {
-                command: geminiResponse.command,
-                explanation: geminiResponse.explanation,
-                is_safe: geminiResponse.is_safe
-            };
+        // Add to chat history
+        this.sessionMemory.chatHistory.push(memoryEntry);
+        
+        // Keep only the last 10 messages for better context
+        if (this.sessionMemory.chatHistory.length > 10) {
+            this.sessionMemory.chatHistory.shift();
         }
         
-        this.chatHistory.push(historyEntry);
+        // Update last activity
+        this.sessionMemory.lastActivity = new Date().toISOString();
         
-        // Mantener solo los últimos 5 mensajes
-        if (this.chatHistory.length > 5) {
-            this.chatHistory.shift();
-        }
-        
-        console.log('🧠 Historial actualizado:', this.chatHistory.length, 'mensajes');
+        console.log('🧠 Session memory updated:', {
+            totalMessages: this.sessionMemory.chatHistory.length,
+            executedActions: this.sessionMemory.executedActions.length,
+            sessionDuration: this.getSessionDuration()
+        });
     }
 
-    getFormattedHistory() {
-        return this.chatHistory.map(entry => {
-            if (entry.role === 'user') {
-                return `Usuario: ${entry.message}`;
-            } else {
-                // Para respuestas de Gemini, incluir el comando si está disponible
-                if (entry.gemini_data) {
-                    return `Gemini: ${entry.gemini_data.explanation} (Comando: ${entry.gemini_data.command})`;
-                } else {
-                    return `Gemini: ${entry.message}`;
-                }
+    // 🧠 Add executed action to memory
+    addActionToMemory(action) {
+        const actionEntry = {
+            timestamp: new Date().toISOString(),
+            sessionTime: Date.now() - new Date(this.sessionMemory.sessionStartTime).getTime(),
+            ...action
+        };
+        
+        this.sessionMemory.executedActions.push(actionEntry);
+        
+        // Keep only the last 20 actions
+        if (this.sessionMemory.executedActions.length > 20) {
+            this.sessionMemory.executedActions.shift();
+        }
+        
+        console.log('🧠 Action added to memory:', action.type || 'unknown');
+    }
+
+    // 🧠 Update site context in memory
+    updateSiteContextInMemory() {
+        if (this.currentSite) {
+            this.sessionMemory.siteContext = {
+                siteName: this.currentSite.name,
+                siteUrl: this.currentSite.url,
+                connectedAt: new Date().toISOString(),
+                serverCapabilities: this.serverCapabilities,
+                emulationMode: this.emulationMode
+            };
+        } else {
+            this.sessionMemory.siteContext = null;
+        }
+        
+        console.log('🧠 Site context updated in memory:', this.sessionMemory.siteContext?.siteName || 'No site');
+    }
+
+    // 🧠 Get formatted conversation history for Gemini
+    getFormattedSessionHistory() {
+        const recentHistory = this.sessionMemory.chatHistory.slice(-8); // Last 8 messages for context
+        
+        return recentHistory.map(entry => {
+            let formattedEntry = `${entry.role === 'user' ? 'User' : 'Assistant'}: ${entry.message}`;
+            
+            // Add command context if available
+            if (entry.gemini_data?.command) {
+                formattedEntry += ` [Executed: ${entry.gemini_data.command}]`;
             }
+            
+            // Add action context if available
+            if (entry.action_type) {
+                formattedEntry += ` [Action: ${entry.action_type}]`;
+            }
+            
+            return formattedEntry;
         }).join('\n');
     }
 
-    clearHistory() {
-        this.chatHistory = [];
-        console.log('🧠 Historial de chat limpiado');
+    // 🧠 Get session context for Gemini
+    getSessionContextForGemini() {
+        const sessionDuration = this.getSessionDuration();
+        const recentActions = this.sessionMemory.executedActions.slice(-5); // Last 5 actions
         
-        // Mostrar mensaje de confirmación al usuario
+        return {
+            session_duration_minutes: Math.round(sessionDuration / 60000),
+            total_messages: this.sessionMemory.chatHistory.length,
+            recent_actions: recentActions.map(action => ({
+                type: action.type,
+                description: action.description,
+                timestamp: action.timestamp,
+                success: action.success
+            })),
+            site_context: this.sessionMemory.siteContext,
+            conversation_history: this.getFormattedSessionHistory()
+        };
+    }
+
+    // 🧠 Get session duration in milliseconds
+    getSessionDuration() {
+        return Date.now() - new Date(this.sessionMemory.sessionStartTime).getTime();
+    }
+
+    // 🧠 Clear session memory
+    clearSessionMemory() {
+        const oldSessionDuration = this.getSessionDuration();
+        
+        this.sessionMemory = {
+            chatHistory: [],
+            siteContext: this.currentSite ? {
+                siteName: this.currentSite.name,
+                siteUrl: this.currentSite.url,
+                connectedAt: new Date().toISOString()
+            } : null,
+            executedActions: [],
+            sessionStartTime: new Date().toISOString(),
+            lastActivity: new Date().toISOString()
+        };
+        
+        console.log('🧠 Session memory cleared. Previous session duration:', Math.round(oldSessionDuration / 60000), 'minutes');
+        
+        // Show confirmation message to user
         this.addMessage('assistant', 
-            `<strong>🧠 Memoria limpiada</strong><br><br>
-            El historial de conversación ha sido reiniciado. Gemini AI empezará una nueva conversación sin contexto previo.`
+            `<strong>🧠 Session memory cleared</strong><br><br>
+            Conversation history and context have been reset. Starting fresh session.<br>
+            <small style="color: #8e8ea0;">Previous session duration: ${Math.round(oldSessionDuration / 60000)} minutes</small>`
         );
+    }
+
+    // 🧠 Legacy compatibility - keep existing chatHistory property
+    get chatHistory() {
+        return this.sessionMemory.chatHistory;
+    }
+
+    // 🧠 Legacy compatibility methods
+    addToHistory(role, message, geminiResponse = null) {
+        const additionalData = {};
+        
+        if (role === 'assistant' && geminiResponse) {
+            additionalData.gemini_data = {
+                command: geminiResponse.command,
+                explanation: geminiResponse.explanation,
+                is_safe: geminiResponse.is_safe,
+                is_conversational: geminiResponse.is_conversational,
+                stateless_mode: geminiResponse.stateless_mode
+            };
+        }
+        
+        this.addToSessionMemory(role, message, additionalData);
+    }
+
+    getFormattedHistory() {
+        return this.getFormattedSessionHistory();
+    }
+
+    clearHistory() {
+        this.clearSessionMemory();
     }
 
     async performAutodiagnosis() {
         if (!this.currentSite) {
-            console.log('⏭️ Saltando autodiagnóstico: no hay sitio configurado');
+            console.log('⏭️ Skipping autodiagnosis: no site configured');
             return;
         }
 
-        console.log('🔍 Iniciando autodiagnóstico del servidor WordPress...');
+        console.log('🔍 Starting WordPress server autodiagnosis...');
         
         try {
-            // Mostrar mensaje de diagnóstico
+            // Show diagnosis message
             this.addMessage('assistant', 
-                `<strong>🔍 Autodiagnóstico en progreso...</strong><br><br>
-                Analizando las capacidades de tu servidor WordPress para optimizar la experiencia.`
+                `<strong>🔍 Autodiagnosis in progress...</strong><br><br>
+                Analyzing your WordPress server capabilities to optimize the experience.`
             );
 
             // Llamar al endpoint de server-info
@@ -187,50 +307,50 @@ class GeminiWPCLI {
                 this.serverCapabilities = serverInfo;
                 this.emulationMode = !serverInfo.wp_cli.available;
                 
-                console.log('📊 Capacidades del servidor:', serverInfo);
-                console.log('🔧 Modo emulación:', this.emulationMode ? 'ACTIVADO' : 'DESACTIVADO');
+                console.log('📊 Server capabilities:', serverInfo);
+                console.log('🔧 Emulation mode:', this.emulationMode ? 'ENABLED' : 'DISABLED');
                 
-                // Mostrar mensaje según las capacidades detectadas
+                // Show message according to detected capabilities
                 if (this.emulationMode) {
                     this.addMessage('assistant', 
-                        `<strong>🤖 Autodiagnóstico completado</strong><br><br>
-                        He detectado que tu hosting es restrictivo y no tiene WP-CLI instalado.<br><br>
-                        <strong>✅ Activando Modo de Emulación Nativa</strong><br>
-                        • Máxima compatibilidad con hostings restrictivos<br>
-                        • Usa la API nativa de WordPress<br>
-                        • Funcionalidad completa garantizada<br><br>
-                        <em>🛡️ Tu sitio está listo para usar con total seguridad.</em>`
+                        `<strong>🤖 Autodiagnosis completed</strong><br><br>
+                        I detected that your hosting is restrictive and doesn't have WP-CLI installed.<br><br>
+                        <strong>✅ Activating Native Emulation Mode</strong><br>
+                        • Maximum compatibility with restrictive hosting<br>
+                        • Uses WordPress native API<br>
+                        • Complete functionality guaranteed<br><br>
+                        <em>🛡️ Your site is ready to use with total security.</em>`
                     );
                 } else {
                     this.addMessage('assistant', 
-                        `<strong>🚀 Autodiagnóstico completado</strong><br><br>
-                        ¡Excelente! Tu servidor tiene WP-CLI instalado y funciones de ejecución disponibles.<br><br>
-                        <strong>✅ Modo de Alto Rendimiento Activado</strong><br>
-                        • WP-CLI real: <span style="color: #00ff88;">${serverInfo.wp_cli.version}</span><br>
-                        • Método: <span style="color: #00ff88;">${serverInfo.wp_cli.method}</span><br>
-                        • Funciones disponibles: <span style="color: #00ff88;">${this.getAvailableFunctions(serverInfo)}</span><br><br>
-                        <em>⚡ Rendimiento óptimo garantizado.</em>`
+                        `<strong>🚀 Autodiagnosis completed</strong><br><br>
+                        Excellent! Your server has WP-CLI installed and execution functions available.<br><br>
+                        <strong>✅ High Performance Mode Activated</strong><br>
+                        • Real WP-CLI: <span style="color: #00ff88;">${serverInfo.wp_cli.version}</span><br>
+                        • Method: <span style="color: #00ff88;">${serverInfo.wp_cli.method}</span><br>
+                        • Available functions: <span style="color: #00ff88;">${this.getAvailableFunctions(serverInfo)}</span><br><br>
+                        <em>⚡ Optimal performance guaranteed.</em>`
                     );
                 }
                 
-                // Actualizar el estado en la interfaz
+                // Update interface status
                 this.updateServerStatusIndicator();
                 
             } else {
-                throw new Error('No se pudo obtener información del servidor');
+                throw new Error('Could not get server information');
             }
             
         } catch (error) {
-            console.error('❌ Error en autodiagnóstico:', error);
-            this.emulationMode = true; // Activar modo seguro por defecto
+            console.error('❌ Error in autodiagnosis:', error);
+            this.emulationMode = true; // Activate safe mode by default
             
             this.addMessage('assistant', 
-                `<strong>⚠️ Autodiagnóstico con advertencias</strong><br><br>
-                No pude conectar completamente con tu servidor, pero no te preocupes.<br><br>
-                <strong>🛡️ Activando Modo Seguro</strong><br>
-                • Compatibilidad máxima activada<br>
-                • Funcionalidad básica garantizada<br>
-                • Todos los comandos seguros disponibles<br><br>
+                `<strong>⚠️ Autodiagnosis with warnings</strong><br><br>
+                I couldn't connect completely with your server, but don't worry.<br><br>
+                <strong>🛡️ Activating Safe Mode</strong><br>
+                • Maximum compatibility activated<br>
+                • Basic functionality guaranteed<br>
+                • All safe commands available<br><br>
                 <em>Error: ${error.message}</em>`
             );
         }
@@ -268,7 +388,7 @@ class GeminiWPCLI {
         if (this.emulationMode) {
             indicator.innerHTML = `
                 <span style="color: #ffbd2e;">🛡️</span>
-                <span>Modo Emulación</span>
+                <span>Emulation Mode</span>
             `;
         } else {
             indicator.innerHTML = `
@@ -282,7 +402,7 @@ class GeminiWPCLI {
     }
 
     loadSavedSites() {
-        console.log('💾 Iniciando carga de sitios guardados...');
+        console.log('💾 Starting saved sites loading...');
         
         try {
             const savedData = localStorage.getItem('gemini-wp-cli-sites');
@@ -292,58 +412,68 @@ class GeminiWPCLI {
                 console.log('📄 Datos encontrados en localStorage');
                 const sitesData = JSON.parse(savedData);
                 
-                // Filtrar sitios que no han expirado (30 días)
+                // Filter sites that haven't expired (30 days)
                 this.savedSites = sitesData.sites.filter(site => {
                     const siteAge = now - new Date(site.savedAt).getTime();
                     const thirtyDays = 30 * 24 * 60 * 60 * 1000;
                     return siteAge < thirtyDays;
                 });
                 
-                // Cargar sitio activo
+                // Load active site
                 const activeSiteId = sitesData.activeSiteId;
                 this.currentSite = this.savedSites.find(site => site.id === activeSiteId) || null;
                 
-                console.log(`✅ Cargados ${this.savedSites.length} sitios desde localStorage`);
+                console.log(`✅ Loaded ${this.savedSites.length} sites from localStorage`);
                 
             } else {
-                console.log('📄 No hay datos guardados, inicializando arrays vacíos');
+                console.log('📄 No saved data, initializing empty arrays');
                 this.savedSites = [];
                 this.currentSite = null;
             }
             
-            // Si no hay sitios o el activo expiró, mostrar modal después de un tiempo
+            // If there are no sites or the active one expired, show modal after some time
             if (this.savedSites.length === 0 || !this.currentSite) {
-                console.log('⏰ Programando mostrar modal de configuración en 2 segundos...');
+                console.log('⏰ Scheduling configuration modal display in 2 seconds...');
                 setTimeout(() => {
-                    console.log('⏰ Ejecutando mostrar modal programado...');
+                    console.log('⏰ Executing scheduled modal display...');
                     this.showConfigModal();
                 }, 2000);
             }
             
         } catch (error) {
-            console.warn('⚠️ Error al cargar sitios guardados:', error);
+            console.warn('⚠️ Error loading saved sites:', error);
             this.savedSites = [];
             this.currentSite = null;
             
-            console.log('⏰ Programando mostrar modal por error en 2 segundos...');
+            console.log('⏰ Scheduling error modal display in 2 seconds...');
             setTimeout(() => {
-                console.log('⏰ Ejecutando mostrar modal por error...');
+                console.log('⏰ Executing error modal display...');
                 this.showConfigModal();
             }, 2000);
         }
         
-        console.log('💾 Carga de sitios completada');
+        console.log('💾 Sites loading completed');
         
-        // 🆕 Actualizar información del sitio si hay uno activo
+        // 🆕 Update site information if there's an active one
         if (this.currentSite) {
-            console.log('🔄 Actualizando información del sitio activo al cargar...');
+            console.log('🔄 Updating active site information on load...');
             this.updateSidebarSiteInfo();
+            this.updateSiteContextInMemory();
+        } else {
+            console.log('💬 No site connected - showing stateless mode indicator');
+            this.showStatelessModeIndicator();
         }
+        
+        // 🧠 Initialize session memory UI
+        this.initializeMemoryUI();
+        
+        // 📝 Initialize code snippets UI
+        this.initializeSnippetsUI();
     }
 
     async runManualDiagnosis() {
         if (!this.currentSite) {
-            this.addErrorMessage('No hay sitio configurado. Configura un sitio primero para ejecutar el diagnóstico.');
+            this.addErrorMessage('No WordPress site configured. Configure a site first to run the diagnosis.');
             return;
         }
         
@@ -358,7 +488,7 @@ class GeminiWPCLI {
         };
         
         localStorage.setItem('gemini-wp-cli-sites', JSON.stringify(sitesData));
-        console.log('✅ Sitios guardados en localStorage');
+        console.log('✅ Sites saved to localStorage');
     }
 
     generateSiteId() {
@@ -366,15 +496,15 @@ class GeminiWPCLI {
     }
 
     addNewSite(name, url, token) {
-        // Verificar límite de 5 sitios
+        // Verify limit of 5 sites
         if (this.savedSites.length >= 5) {
-            throw new Error('Máximo 5 sitios permitidos. Elimina uno existente primero.');
+            throw new Error('Maximum 5 sites allowed. Delete an existing one first.');
         }
         
-        // Verificar si la URL ya existe
+        // Verify if URL already exists
         const existingSite = this.savedSites.find(site => site.url === url);
         if (existingSite) {
-            throw new Error('Este sitio ya está configurado.');
+            throw new Error('This site is already configured.');
         }
         
         const newSite = {
@@ -394,11 +524,21 @@ class GeminiWPCLI {
     }
 
     deleteSite(siteId) {
+        const site = this.savedSites.find(s => s.id === siteId);
         this.savedSites = this.savedSites.filter(site => site.id !== siteId);
         
-        // Si el sitio eliminado era el activo, limpiar
+        // If deleted site was active, clear it
         if (this.currentSite?.id === siteId) {
             this.currentSite = null;
+            
+            // 🧠 Update session memory
+            this.updateSiteContextInMemory();
+            this.addActionToMemory({
+                type: 'site_disconnected',
+                description: `Disconnected from site: ${site?.name || 'Unknown'}`,
+                site_name: site?.name,
+                success: true
+            });
         }
         
         this.saveSitesToStorage();
@@ -413,18 +553,28 @@ class GeminiWPCLI {
             this.saveSitesToStorage();
             this.updateSitesDisplay();
             
+            // 🧠 Update session memory with new site context
+            this.updateSiteContextInMemory();
+            this.addActionToMemory({
+                type: 'site_connected',
+                description: `Connected to site: ${site.name}`,
+                site_name: site.name,
+                site_url: site.url,
+                success: true
+            });
+            
             // 🎨 Actualizar información en la sidebar
             this.updateSidebarSiteInfo();
             
-            // Mostrar mensaje de cambio de sitio
+            // Show site change message
             this.addMessage('assistant', 
-                `<strong>🔄 Sitio cambiado</strong><br><br>
-                Ahora conectado a: <code>${site.name}</code><br>
+                `<strong>🔄 Site connected</strong><br><br>
+                Now connected to: <code>${site.name}</code><br>
                 URL: <span style="color: #00bcd4;">${site.url}</span><br><br>
-                <em>Iniciando autodiagnóstico del servidor...</em>`
+                <em>Starting server autodiagnosis...</em>`
             );
             
-            // Ejecutar autodiagnóstico automáticamente
+            // Execute autodiagnosis automatically
             setTimeout(() => {
                 this.performAutodiagnosis();
             }, 1000);
@@ -432,11 +582,11 @@ class GeminiWPCLI {
     }
 
     updateSitesDisplay() {
-        // Actualizar lista de sitios guardados en la sidebar
+        // Update saved sites list in sidebar
         this.savedSitesList.innerHTML = '';
         
         if (this.savedSites.length === 0) {
-            this.savedSitesList.innerHTML = '<p style="color: #888; text-align: center; padding: 20px; font-size: 12px;">No hay sitios configurados</p>';
+            this.savedSitesList.innerHTML = '<p style="color: #888; text-align: center; padding: 20px; font-size: 12px;">No sites configured</p>';
             return;
         }
         
@@ -451,10 +601,10 @@ class GeminiWPCLI {
                 <div class="saved-site-url">${site.url}</div>
                 <div class="saved-site-actions">
                     ${isActive ? 
-                        '<span class="site-action-btn active-indicator">● Activo</span>' : 
-                        `<button class="site-action-btn" onclick="window.geminiApp.selectSite('${site.id}')">Usar</button>`
+                        '<span class="site-action-btn active-indicator">● Active</span>' : 
+                        `<button class="site-action-btn" onclick="window.geminiApp.selectSite('${site.id}')">Use</button>`
                     }
-                    <button class="site-action-btn delete" onclick="window.geminiApp.deleteSiteWithConfirmation('${site.id}')">Desconectar</button>
+                    <button class="site-action-btn delete" onclick="window.geminiApp.deleteSiteWithConfirmation('${site.id}')">Disconnect</button>
                 </div>
             `;
             
@@ -468,44 +618,51 @@ class GeminiWPCLI {
         const diffHours = Math.floor((now - lastUsed) / (1000 * 60 * 60));
         
         let timeText = '';
-        if (diffHours < 1) timeText = 'Usado hace menos de 1 hora';
-        else if (diffHours < 24) timeText = `Usado hace ${diffHours} horas`;
-        else timeText = `Usado hace ${Math.floor(diffHours / 24)} días`;
+        if (diffHours < 1) timeText = 'Used less than 1 hour ago';
+        else if (diffHours < 24) timeText = `Used ${diffHours} hours ago`;
+        else timeText = `Used ${Math.floor(diffHours / 24)} days ago`;
         
-        return `${site.status === 'connected' ? 'Conectado' : 
-                 site.status === 'error' ? 'Error de conexión' : 'Sin probar'} • ${timeText}`;
+        return `${site.status === 'connected' ? 'Connected' : 
+                 site.status === 'error' ? 'Connection error' : 'Not tested'} • ${timeText}`;
     }
 
     deleteSiteWithConfirmation(siteId) {
         const site = this.savedSites.find(s => s.id === siteId);
         if (!site) return;
         
-        if (confirm(`¿Desconectar "${site.name}"?\n\nEsto eliminará la configuración guardada.`)) {
+        if (confirm(`Disconnect "${site.name}"?\n\nThis will remove the saved configuration.`)) {
             this.deleteSite(siteId);
             
-            // Mostrar mensaje de confirmación
+            // Show confirmation message
             this.addMessage('assistant', 
-                `<strong>🔌 Sitio desconectado</strong><br><br>
-                Se eliminó: <code>${site.name}</code><br>
-                <em>Puedes reconectarlo cuando quieras.</em>`
+                `<strong>🔌 Site disconnected</strong><br><br>
+                Removed: <code>${site.name}</code><br>
+                <em>You can reconnect it whenever you want.</em>`
             );
+            
+            // If no sites remain, show stateless mode
+            if (this.savedSites.length === 0 || !this.currentSite) {
+                setTimeout(() => {
+                    this.showStatelessModeIndicator();
+                }, 1000);
+            }
         }
     }
 
     showConfigModal() {
-        console.log('🔧 Mostrando modal de configuración...');
+        console.log('🔧 Showing configuration modal...');
         
         try {
-            // Limpiar formulario
+            // Clear form
             document.getElementById('siteName').value = '';
             document.getElementById('wordpressUrl').value = '';
             document.getElementById('authToken').value = '';
             
-            // Actualizar displays
-            console.log('📊 Actualizando display de sitios...');
+            // Update displays
+            console.log('📊 Updating sites display...');
             this.updateSitesDisplay();
             
-            console.log('👁️ Mostrando modal...');
+            console.log('👁️ Showing modal...');
             this.configModal.classList.add('show');
             
             console.log('🎯 Enfocando campo nombre...');
@@ -514,9 +671,9 @@ class GeminiWPCLI {
                 siteNameField.focus();
             }
             
-            console.log('✅ Modal mostrado correctamente');
+            console.log('✅ Modal shown correctly');
         } catch (error) {
-            console.error('❌ Error al mostrar modal:', error);
+            console.error('❌ Error showing modal:', error);
         }
     }
 
@@ -541,8 +698,40 @@ class GeminiWPCLI {
         statusDiv.style.display = 'none';
     }
 
+    async checkWordPressAPI(wordpressUrl) {
+        try {
+            console.log('🔍 Verifying WordPress REST API...');
+            
+            const response = await fetch(`${this.config.SERVER_URL}${this.config.API.ENDPOINTS.CHECK_API}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    wordpressUrl: wordpressUrl
+                })
+            });
+
+            const result = await response.json();
+            console.log('📊 API verification result:', result);
+            
+            return result;
+
+        } catch (error) {
+            console.error('❌ Error verificando API REST:', error);
+            return {
+                status: 'error',
+                message: error.message,
+                api_rest_available: false,
+                plugin_installed: false
+            };
+        }
+    }
+
     async testConnection(wordpressUrl, authToken) {
         try {
+            console.log('🔍 Iniciando test de conexión avanzado...');
+            
             const response = await fetch(`${this.config.SERVER_URL}${this.config.API.ENDPOINTS.TEST}`, {
                 method: 'POST',
                 headers: {
@@ -556,13 +745,26 @@ class GeminiWPCLI {
             
             if (response.ok) {
                 const data = await response.json();
+                console.log('✅ Test de conexión exitoso:', data);
                 return { success: true, data };
             } else {
                 const errorData = await response.json();
-                return { success: false, error: errorData.message || `HTTP ${response.status}` };
+                console.error('❌ Error en test de conexión:', errorData);
+                
+                // Proporcionar información más útil al usuario
+                let userFriendlyMessage = errorData.message || `HTTP ${response.status}`;
+                
+                if (errorData.error_type === 'ETIMEDOUT' || errorData.message.includes('timeout')) {
+                    userFriendlyMessage = `Timeout connecting to WordPress.\n\nPossible causes:\n${errorData.suggestions ? errorData.suggestions.join('\n') : '- Site not accessible\n- Plugin not installed\n- Firewall blocking connections'}\n\nURL tested: ${errorData.debug_info?.target_url || wordpressUrl}`;
+                } else if (errorData.error_type === 'ENOTFOUND') {
+                    userFriendlyMessage = `Could not resolve domain.\n\nVerify that the URL is correct: ${wordpressUrl}`;
+                }
+                
+                return { success: false, error: userFriendlyMessage, details: errorData };
             }
         } catch (error) {
-            return { success: false, error: error.message };
+            console.error('❌ Error en testConnection:', error);
+            return { success: false, error: `Error de red: ${error.message}` };
         }
     }
 
@@ -574,20 +776,20 @@ class GeminiWPCLI {
         try {
             const response = await fetch(`${this.config.SERVER_URL}${this.config.API.ENDPOINTS.HEALTH}`);
             if (response.ok) {
-                console.log('✅ Conexión con servidor proxy establecida');
+                console.log('✅ Proxy server connection established');
             }
         } catch (error) {
-            console.warn('⚠️ No se pudo conectar con el servidor proxy:', error.message);
+            console.warn('⚠️ Could not connect to proxy server:', error.message);
         }
     }
 
     initializeEventListeners() {
-        console.log('🎧 Registrando event listeners...');
+        console.log('🎧 Registering event listeners...');
         
         // Eventos existentes
-        console.log('📝 Registrando evento de envío...');
+        console.log('📝 Registering send event...');
         this.sendButton.addEventListener('click', () => {
-            console.log('🖱️ Click en botón enviar');
+            console.log('🖱️ Click on send button');
             this.sendMessage();
         });
         
@@ -603,45 +805,45 @@ class GeminiWPCLI {
             this.autoResizeTextarea();
         });
 
-        // Eventos del modal de configuración
-        console.log('⚙️ Registrando evento del botón de configuración...');
+        // Configuration modal events
+        console.log('⚙️ Registering configuration button event...');
         this.configButton.addEventListener('click', (e) => {
-            console.log('🖱️ Click en botón de configuración');
+            console.log('🖱️ Click on configuration button');
             e.preventDefault();
             e.stopPropagation();
             this.showConfigModal();
         });
         
-        console.log('❌ Registrando evento de cerrar modal...');
+        console.log('❌ Registering close modal event...');
         this.configCloseButton.addEventListener('click', () => {
-            console.log('🖱️ Click en cerrar modal');
+            console.log('🖱️ Click on close modal');
             this.hideConfigModal();
         });
         
         this.configCancelButton.addEventListener('click', () => {
-            console.log('🖱️ Click en cancelar');
+            console.log('🖱️ Click on cancel');
             this.hideConfigModal();
         });
         
         // Cerrar modal al hacer clic fuera
         this.configModal.addEventListener('click', (e) => {
             if (e.target === this.configModal) {
-                console.log('🖱️ Click fuera del modal');
+                console.log('🖱️ Click outside modal');
                 this.hideConfigModal();
             }
         });
 
-        // Selector de sitio activo (mantener para compatibilidad)
-        console.log('🔄 Registrando selector de sitio...');
+        // Active site selector (keep for compatibility)
+        console.log('🔄 Registering site selector...');
         this.activeSiteSelect.addEventListener('change', (e) => {
-            console.log('🔄 Cambio de sitio:', e.target.value);
+            console.log('🔄 Site change:', e.target.value);
             if (e.target.value) {
                 this.selectSite(e.target.value);
             }
         });
 
         // Manejar envío del formulario
-        console.log('📋 Registrando formulario...');
+        console.log('📋 Registering form...');
         this.configForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             console.log('📋 Envío de formulario');
@@ -651,7 +853,7 @@ class GeminiWPCLI {
         // Cerrar modal con Escape
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.configModal.classList.contains('show')) {
-                console.log('⌨️ Escape presionado');
+                console.log('⌨️ Escape pressed');
                 this.hideConfigModal();
             }
         });
@@ -661,11 +863,11 @@ class GeminiWPCLI {
         // Botón selector de sitios en el header
         const siteSelectorBtn = document.getElementById('siteSelectorBtn');
         if (siteSelectorBtn) {
-            console.log('✅ Registrando event listener para siteSelectorBtn');
+            console.log('✅ Registering event listener for siteSelectorBtn');
             siteSelectorBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('🖱️ Click en siteSelectorBtn detectado');
+                console.log('🖱️ Click on siteSelectorBtn detected');
                 this.toggleSiteDropdown();
             });
         } else {
@@ -675,9 +877,9 @@ class GeminiWPCLI {
         // Botón "Añadir Sitio" desde el desplegable
         const addSiteFromDropdown = document.getElementById('addSiteFromDropdown');
         if (addSiteFromDropdown) {
-            console.log('✅ Registrando event listener para addSiteFromDropdown');
+            console.log('✅ Registering event listener for addSiteFromDropdown');
             addSiteFromDropdown.addEventListener('click', () => {
-                console.log('➕ Añadir sitio desde desplegable');
+                console.log('➕ Add site from dropdown');
                 this.hideSiteDropdown();
                 this.showConfigModal();
             });
@@ -690,13 +892,13 @@ class GeminiWPCLI {
             if (e.key === 'Escape') {
                 const dropdown = document.getElementById('siteDropdown');
                 if (dropdown && dropdown.style.display === 'block') {
-                    console.log('⌨️ Escape presionado, ocultando dropdown');
+                    console.log('⌨️ Escape pressed, hiding dropdown');
                     this.hideSiteDropdown();
                 }
             }
         });
         
-        console.log('✅ Todos los event listeners registrados');
+        console.log('✅ All event listeners registered');
     }
 
     async handleConfigSave() {
@@ -706,54 +908,69 @@ class GeminiWPCLI {
         const globalGeminiApiKey = document.getElementById('globalGeminiApiKey').value.trim();
 
         if (!siteName || !wordpressUrl || !authToken) {
-            this.showConfigStatus('Por favor, completa todos los campos requeridos', 'error');
+            this.showConfigStatus('Please complete all required fields', 'error');
             return;
         }
 
-        // Limpiar URL (remover trailing slash)
+        // Clean URL (remove trailing slash)
         const cleanUrl = wordpressUrl.replace(/\/$/, '');
 
         try {
-            this.showConfigStatus('Probando conexión...', 'success');
+            this.showConfigStatus('Testing connection...', 'success');
 
-            // Probar conexión
+            // Step 1: Verify basic REST API
+            console.log('🔍 Step 1: Verifying WordPress REST API...');
+            const apiCheck = await this.checkWordPressAPI(cleanUrl);
+            
+            if (!apiCheck.api_rest_available) {
+                throw new Error(`WordPress REST API not available.\n\nVerify that:\n• The site is accessible: ${cleanUrl}\n• WordPress is working correctly\n• No plugins are blocking the REST API`);
+            }
+            
+            if (!apiCheck.plugin_installed) {
+                throw new Error(`Gemini WP-CLI plugin not found.\n\nTo continue you need:\n\n1. Download the plugin from the repository\n2. Install it at: ${cleanUrl}/wp-admin/plugin-install.php\n3. Activate it from: ${cleanUrl}/wp-admin/plugins.php\n4. Get the token from: ${cleanUrl}/wp-admin/options-general.php?page=gemini-token\n\nEndpoints verified:\n• REST API: ${apiCheck.endpoints?.api_rest || 'N/A'}\n• Plugin Test: ${apiCheck.endpoints?.plugin_test || 'N/A'}`);
+            }
+            
+            console.log('✅ REST API and plugin verified correctly');
+
+            // Step 2: Test connection with authentication
+            console.log('🔍 Step 2: Testing authentication...');
             const testResult = await this.testConnection(cleanUrl, authToken);
 
             if (testResult.success) {
-                // Guardar API Key global si se proporcionó
+                // Save global API Key if provided
                 if (globalGeminiApiKey) {
                     this.saveGlobalGeminiApiKey(globalGeminiApiKey);
-                    console.log('🔑 API Key global guardada');
+                    console.log('🔑 Global API Key saved');
                 }
                 
-                // Añadir sitio (sin API Key por sitio)
+                // Add site (without per-site API Key)
                 const newSite = this.addNewSite(siteName, cleanUrl, authToken);
                 newSite.status = 'connected';
                 
-                // Seleccionar como sitio activo
+                // Select as active site
                 this.selectSite(newSite.id);
                 
-                // 🎨 Actualizar información en la sidebar
+                // 🎨 Update sidebar information
                 this.updateSidebarSiteInfo();
                 
-                this.showConfigStatus('✅ Sitio añadido y configurado correctamente', 'success');
+                this.showConfigStatus('✅ Site added and configured correctly', 'success');
                 
-                // Limpiar formulario
+                // Clear form
                 document.getElementById('siteName').value = '';
                 document.getElementById('wordpressUrl').value = '';
                 document.getElementById('authToken').value = '';
                 document.getElementById('globalGeminiApiKey').value = '';
                 
-                // Actualizar display
+                // Update display
                 this.updateSitesDisplay();
                 
-                // Cerrar modal después de un momento
+                // Close modal after a moment
                 setTimeout(() => this.hideConfigModal(), 2000);
                 
-                // El autodiagnóstico se ejecutará automáticamente por selectSite()
+                // Autodiagnosis will run automatically via selectSite()
                 
             } else {
-                this.showConfigStatus(`❌ Error de conexión: ${testResult.error}`, 'error');
+                this.showConfigStatus(`❌ Connection error: ${testResult.error}`, 'error');
             }
         } catch (error) {
             this.showConfigStatus(`❌ Error: ${error.message}`, 'error');
@@ -769,80 +986,273 @@ class GeminiWPCLI {
         const message = this.messageInput.value.trim();
         if (!message) return;
 
-        // Verificar que hay un sitio configurado
+        // 🆕 NO SITE CONNECTED MODE: Allow pure Gemini chat without site
         if (!this.currentSite) {
-            this.addErrorMessage('No hay sitio WordPress configurado. Haz clic en ⚙️ para configurar uno.');
+            console.log('💬 No site connected - entering stateless chat mode');
+            this.handleNoSiteConnectedChat(message);
             return;
         }
 
-        // Deshabilitar input mientras se procesa
+        // Disable input while processing
         this.setInputState(false);
         
-        // Mostrar mensaje del usuario
+        // Show user message
         this.addMessage('user', message);
         
-        // 🧠 Añadir mensaje del usuario al historial
+        // 🧠 Add user message to history
         this.addToHistory('user', message);
         
-        // Limpiar input
+        // Clear input
         this.messageInput.value = '';
         this.autoResizeTextarea();
 
-        // Mostrar animación de "pensando"
-        const thinkingId = this.addThinkingAnimation();
+        // Show "thinking" animation
+        const thinkingId = this.addThinkingAnimation('thinking');
 
         try {
-            // Llamar a Gemini AI para procesar el mensaje
-            console.log('🧠 Procesando mensaje con Gemini AI...');
+            // Update phase: analyzing
+            setTimeout(() => this.updateThinkingPhase(thinkingId, 'analyzing'), 500);
+            
+            // Call Gemini AI to process the message
+            console.log('🧠 Processing message with Gemini AI...');
+            
+            // Update phase: processing
+            setTimeout(() => this.updateThinkingPhase(thinkingId, 'processing'), 1000);
+            
             const geminiResponse = await this.getGeminiResponse(message);
             
-            // Remover animación de pensando
+            // Update phase: responding
+            this.updateThinkingPhase(thinkingId, 'responding');
+            
+            // Small pause to show the "responding" phase
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // Remove thinking animation
             this.removeThinkingAnimation(thinkingId);
             
-            // Verificar que tenemos una respuesta válida
+            // Verify we have a valid response
             if (!geminiResponse || !geminiResponse.explanation) {
-                throw new Error('Respuesta inválida de Gemini');
+                throw new Error('Invalid response from Gemini');
             }
             
-            // Verificar si es una respuesta conversacional
+            // Check if it's a conversational response
             if (geminiResponse.is_conversational || !geminiResponse.command) {
-                console.log('💬 Procesando respuesta conversacional');
+                console.log('💬 Processing conversational response');
                 
-                // Para respuestas conversacionales, mostrar directamente la explicación
+                // For conversational responses, show explanation directly
                 this.addMessage('assistant', geminiResponse.explanation);
                 
-                // 🧠 Añadir respuesta conversacional al historial
+                // 🧠 Add conversational response to history
                 this.addToHistory('assistant', geminiResponse.explanation);
                 
-                return; // No ejecutar comando ni mostrar preview card
+                // 🔄 WORKFLOW ENGINE: Show workflow suggestions if available
+                if (geminiResponse.workflow_context && geminiResponse.workflow_context.has_suggestions) {
+                    console.log('🔄 Showing workflow suggestions in conversational response');
+                    this.addWorkflowSuggestions(geminiResponse.workflow_context);
+                }
+                
+                // 🤖 POLICY ENGINE: Show policy suggestions if available
+                if (geminiResponse.policy_context && geminiResponse.policy_context.has_suggestions) {
+                    console.log('🤖 Showing policy suggestions in conversational response');
+                    this.addPolicySuggestions(geminiResponse.policy_context);
+                }
+                
+                // 🔄 WORKFLOW ENGINE: Show workflow suggestions if available
+                if (geminiResponse.workflow_context && geminiResponse.workflow_context.has_suggestions) {
+                    console.log('🔄 Showing workflow suggestions in conversational response');
+                    this.addWorkflowSuggestions(geminiResponse.workflow_context);
+                }
+                
+                return; // Don't execute command or show preview card
             }
             
-            // Para respuestas con comandos, continuar con el flujo normal
-            console.log('🔧 Procesando respuesta con comando:', geminiResponse.command);
+            // For responses with commands, continue with normal flow
+            console.log('🔧 Processing response with command:', geminiResponse.command);
             
-            // Mostrar respuesta de Gemini con información adicional
-            let responseMessage = `<strong>🤖 Gemini AI ha procesado tu solicitud:</strong><br><br>`;
+            // Show Gemini response with additional information
+            let responseMessage = `<strong>🤖 Gemini AI has processed your request:</strong><br><br>`;
             responseMessage += `"${geminiResponse.explanation}"`;
             
-            // Añadir indicador si es respuesta de emergencia
+            // Add indicator if it's emergency response
             if (geminiResponse.explanation && geminiResponse.explanation.includes('emergencia')) {
-                responseMessage += `<br><br><em style="color: #ffbd2e;">⚠️ Nota: Gemini AI no está disponible, usando sistema de emergencia.</em>`;
+                responseMessage += `<br><br><em style="color: #ffbd2e;">⚠️ Note: Gemini AI is not available, using emergency system.</em>`;
             }
             
             this.addMessage('assistant', responseMessage);
             
-            // 🧠 Añadir respuesta de Gemini al historial
+            // 🧠 Add Gemini response to history
             this.addToHistory('assistant', geminiResponse.explanation, geminiResponse);
             
-            // Mostrar tarjeta de previsualización con los datos reales de Gemini
+            // Show preview card with real Gemini data
             this.addPreviewCard(geminiResponse);
             
         } catch (error) {
-            console.error('❌ Error procesando mensaje:', error);
+            console.error('❌ Error processing message:', error);
             this.removeThinkingAnimation(thinkingId);
-            this.addErrorMessage(`Error procesando tu solicitud: ${error.message}`);
+            this.addErrorMessage(`Error processing your request: ${error.message}`);
         } finally {
             this.setInputState(true);
+        }
+    }
+
+    // 🆕 NO SITE CONNECTED MODE: Handle pure Gemini chat without WordPress site
+    async handleNoSiteConnectedChat(message) {
+        // Disable input while processing
+        this.setInputState(false);
+        
+        // Show user message
+        this.addMessage('user', message);
+        
+        // Clear input
+        this.messageInput.value = '';
+        this.autoResizeTextarea();
+
+        // Show "thinking" animation
+        const thinkingId = this.addThinkingAnimation('thinking');
+
+        try {
+            // Update phase: analyzing
+            setTimeout(() => this.updateThinkingPhase(thinkingId, 'analyzing'), 500);
+            
+            console.log('💬 Processing stateless chat with Gemini AI...');
+            
+            // Update phase: processing
+            setTimeout(() => this.updateThinkingPhase(thinkingId, 'processing'), 1000);
+            
+            // Call Gemini AI in stateless mode (no site context, no history)
+            const geminiResponse = await this.getStatelessGeminiResponse(message);
+            
+            // Update phase: responding
+            this.updateThinkingPhase(thinkingId, 'responding');
+            
+            // Small pause to show the "responding" phase
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // Remove thinking animation
+            this.removeThinkingAnimation(thinkingId);
+            
+            // Verify we have a valid response
+            if (!geminiResponse || !geminiResponse.explanation) {
+                throw new Error('Invalid response from Gemini');
+            }
+            
+            // Show Gemini response with stateless indicator
+            let responseMessage = `<div style="background: rgba(255, 189, 46, 0.1); border: 1px solid #ffbd2e; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+                <strong>💬 Temporary Chat Mode</strong><br>
+                <small style="color: #ffbd2e;">No site connected • Stateless conversation • No memory stored</small>
+            </div>`;
+            
+            responseMessage += geminiResponse.explanation;
+            
+            this.addMessage('assistant', responseMessage);
+            
+            // Show suggestion to connect a site if user asks WordPress-related questions
+            if (this.isWordPressRelatedQuery(message)) {
+                setTimeout(() => {
+                    this.addMessage('assistant', 
+                        `<div style="background: rgba(16, 163, 127, 0.1); border: 1px solid #10a37f; border-radius: 8px; padding: 12px; margin-top: 16px;">
+                            <strong>💡 Tip</strong><br>
+                            For WordPress-specific assistance, connect your site using the ⚙️ button to unlock:
+                            <ul style="margin: 8px 0 0 20px; color: #10a37f;">
+                                <li>Site analysis and diagnostics</li>
+                                <li>Policy-driven recommendations</li>
+                                <li>Guided workflows</li>
+                                <li>Real WordPress abilities</li>
+                            </ul>
+                        </div>`
+                    );
+                }, 1000);
+            }
+            
+        } catch (error) {
+            console.error('❌ Error in stateless chat:', error);
+            this.removeThinkingAnimation(thinkingId);
+            this.addErrorMessage(`Error processing your request: ${error.message}`);
+        } finally {
+            this.setInputState(true);
+        }
+    }
+
+    // 🆕 Check if the user query is WordPress-related
+    isWordPressRelatedQuery(message) {
+        const wpKeywords = [
+            'wordpress', 'wp-', 'plugin', 'theme', 'post', 'page', 'admin', 'dashboard',
+            'database', 'mysql', 'php', 'apache', 'nginx', 'hosting', 'domain',
+            'seo', 'yoast', 'woocommerce', 'elementor', 'gutenberg', 'block',
+            'sitio', 'página', 'entrada', 'administrador', 'base de datos'
+        ];
+        
+        const lowerMessage = message.toLowerCase();
+        return wpKeywords.some(keyword => lowerMessage.includes(keyword));
+    }
+
+    // 🆕 Get Gemini response in stateless mode (no site context, no history)
+    async getStatelessGeminiResponse(userMessage) {
+        try {
+            console.log('💬 Sending stateless prompt to Gemini AI:', userMessage);
+            
+            // Preparar headers
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            // 🔑 Añadir API Key global si existe
+            if (this.hasGlobalGeminiApiKey()) {
+                headers['x-user-gemini-key'] = this.globalGeminiApiKey;
+                console.log('🔑 Using custom global API Key for stateless chat');
+            } else {
+                console.log('🔑 Using server API Key (shared) for stateless chat');
+            }
+            
+            // Call Gemini endpoint with NO site context and NO chat history
+            const response = await fetch(`${this.config.SERVER_URL}${this.config.API.ENDPOINTS.GEMINI_ASK}`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({
+                    prompt: userMessage,
+                    siteContext: {}, // Empty site context
+                    chatHistory: []  // No chat history - stateless
+                }),
+                timeout: this.config.API.TIMEOUT
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            
+            if (data.status === 'success' && data.gemini_response) {
+                console.log('✅ Stateless response from Gemini AI:', data.gemini_response);
+                
+                const geminiResp = data.gemini_response;
+                if (geminiResp.explanation) {
+                    return geminiResp;
+                } else {
+                    console.warn('⚠️ Stateless Gemini response with incomplete structure:', geminiResp);
+                    throw new Error('Invalid Gemini response format');
+                }
+            } else {
+                throw new Error(data.message || data.gemini_error || 'Error in Gemini response');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error in stateless Gemini chat:', error);
+            
+            // Fallback to basic response for stateless mode (no memory tracking)
+            return {
+                explanation: `I'm having trouble connecting to Gemini AI right now. This is a temporary chat mode without site connection.
+                
+To get the full WordPress assistance experience, please:
+1. Click the ⚙️ configuration button
+2. Connect your WordPress site
+3. Enjoy policy-driven AI assistance with full capabilities
+
+Error: ${error.message}`,
+                is_conversational: true,
+                is_safe: true
+            };
         }
     }
 
@@ -852,25 +1262,32 @@ class GeminiWPCLI {
         thinkingDiv.id = thinkingId;
         thinkingDiv.className = 'message assistant';
         
-        const contentDiv = document.createElement('div');
-        contentDiv.className = 'message-content';
-        contentDiv.innerHTML = `
-            <div class="gemini-thinking">
-                <div class="audio-bars">
-                    <div class="audio-bar"></div>
-                    <div class="audio-bar"></div>
-                    <div class="audio-bar"></div>
-                    <div class="audio-bar"></div>
-                    <div class="audio-bar"></div>
-                    <div class="audio-bar"></div>
-                    <div class="audio-bar"></div>
-                    <div class="audio-bar"></div>
+        // Create message header
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'message-header';
+        headerDiv.innerHTML = `
+            <div class="message-avatar assistant">🤖</div>
+            <div class="message-author">Typingpress</div>
+            <div class="message-time">Now</div>
+        `;
+        
+        // Create thinking indicator
+        const thinkingIndicator = document.createElement('div');
+        thinkingIndicator.className = 'typing-indicator';
+        thinkingIndicator.innerHTML = `
+            <div class="typing-avatar">🤖</div>
+            <div class="typing-text">
+                <span id="thinking-phase-${thinkingId}">Thinking</span>
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
                 </div>
-                <div class="thinking-text">🧠 Gemini AI está analizando tu solicitud...</div>
             </div>
         `;
         
-        thinkingDiv.appendChild(contentDiv);
+        thinkingDiv.appendChild(headerDiv);
+        thinkingDiv.appendChild(thinkingIndicator);
         this.chatArea.appendChild(thinkingDiv);
         this.scrollToBottom();
         
@@ -884,17 +1301,32 @@ class GeminiWPCLI {
         }
     }
 
+    updateThinkingPhase(thinkingId, phase) {
+        const phaseElement = document.getElementById(`thinking-phase-${thinkingId}`);
+        if (phaseElement) {
+            const phaseText = {
+                'thinking': 'Thinking',
+                'analyzing': 'Analyzing',
+                'processing': 'Processing',
+                'responding': 'Responding'
+            };
+            phaseElement.textContent = phaseText[phase] || 'Thinking';
+        }
+    }
+
     setInputState(enabled) {
         this.messageInput.disabled = !enabled;
         this.sendButton.disabled = !enabled;
         
         if (enabled) {
-            this.sendButton.textContent = 'Enviar';
+            this.sendButton.textContent = 'Send';
             this.sendButton.classList.remove('loading-gradient');
+            this.messageInput.placeholder = 'Tell me your problem or request... E.g: \'My site is slow\', \'500 error\', \'List plugins\'';
             this.messageInput.focus();
         } else {
             this.sendButton.innerHTML = '<div class="loading"></div>';
             this.sendButton.classList.add('loading-gradient');
+            this.messageInput.placeholder = 'Typingpress is thinking...';
         }
     }
 
@@ -907,14 +1339,14 @@ class GeminiWPCLI {
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
         
-        // Aplicar renderizado Markdown mejorado solo a mensajes del asistente
+        // Apply enhanced Markdown rendering only to assistant messages
         if (type === 'assistant') {
             console.log('🎨 Aplicando renderizado Markdown...');
             const renderedContent = this.renderMarkdown(content);
             console.log('✅ Markdown renderizado, longitud:', renderedContent?.length);
             contentDiv.innerHTML = renderedContent;
         } else {
-            console.log('👤 Mensaje de usuario, sin renderizado');
+            console.log('👤 User message, no rendering');
             contentDiv.innerHTML = content;
         }
         
@@ -923,10 +1355,431 @@ class GeminiWPCLI {
         this.scrollToBottom();
     }
 
+    // 🤖 POLICY ENGINE: Mostrar sugerencias de políticas
+    addPolicySuggestions(policyContext) {
+        if (!policyContext || !policyContext.has_suggestions || !policyContext.suggestions.length) {
+            return;
+        }
+        
+        console.log('🤖 Mostrando sugerencias de políticas:', policyContext.suggestions.length);
+        
+        const suggestionsDiv = document.createElement('div');
+        suggestionsDiv.className = 'message assistant policy-suggestions';
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        
+        let suggestionsHtml = `
+            <div class="policy-suggestions-container">
+                <div class="policy-header">
+                    <div class="policy-icon">🤖</div>
+                    <div class="policy-title">Proactive Assistant - Detected Situations</div>
+                    <div class="policy-count">${policyContext.suggestions.length} suggestion${policyContext.suggestions.length > 1 ? 's' : ''}</div>
+                </div>
+                
+                <div class="policy-principle">
+                    <strong>Principle:</strong> "AI doesn't automate actions. AI automates understanding and preparation."
+                </div>
+                
+                <div class="policy-suggestions-list">
+        `;
+        
+        policyContext.suggestions.forEach((suggestion, index) => {
+            const priorityIcon = this.getPriorityIcon(suggestion.priority);
+            const riskColor = this.getRiskColor(suggestion.risk_level);
+            
+            // Generar IDs únicos para los botones
+            const simulateButtonId = `policy_simulate_${suggestion.id}_${Date.now()}`;
+            const executeButtonId = `policy_execute_${suggestion.id}_${Date.now()}`;
+            const dismissButtonId = `policy_dismiss_${suggestion.id}_${Date.now()}`;
+            
+            suggestionsHtml += `
+                <div class="policy-suggestion-card" data-priority="${suggestion.priority}">
+                    <div class="suggestion-header">
+                        <div class="suggestion-priority">${priorityIcon} ${suggestion.priority.toUpperCase()}</div>
+                        <div class="suggestion-category">${suggestion.category}</div>
+                        <div class="suggestion-risk" style="color: ${riskColor}">
+                            ${this.getRiskIcon(suggestion.risk_level)} ${suggestion.risk_level}
+                        </div>
+                    </div>
+                    
+                    <div class="suggestion-content">
+                        <h4 class="suggestion-title">${suggestion.title}</h4>
+                        <p class="suggestion-description">${suggestion.description}</p>
+                        
+                        <div class="suggestion-details">
+                            <div class="detail-section">
+                                <strong>Why was it triggered?</strong>
+                                <p>${suggestion.why_triggered}</p>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <strong>Recommended action:</strong>
+                                <p>${suggestion.recommended_action}</p>
+                            </div>
+                            
+                            <div class="detail-section">
+                                <strong>Risk assessment:</strong>
+                                <p>${suggestion.risk_assessment}</p>
+                            </div>
+                            
+                            ${suggestion.next_steps && suggestion.next_steps.length > 0 ? `
+                            <div class="detail-section">
+                                <strong>Next steps:</strong>
+                                <ul>
+                                    ${suggestion.next_steps.map(step => `<li>${step}</li>`).join('')}
+                                </ul>
+                            </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="suggestion-ability">
+                            <strong>Suggested action:</strong> <code>${suggestion.suggested_ability.name}</code>
+                            ${Object.keys(suggestion.suggested_ability.parameters).length > 0 ? `
+                            <div class="ability-parameters">
+                                <strong>Parameters:</strong>
+                                <pre>${JSON.stringify(suggestion.suggested_ability.parameters, null, 2)}</pre>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="suggestion-actions">
+                        <button id="${simulateButtonId}" class="policy-action-button simulate">
+                            🧪 Simulate Action
+                        </button>
+                        <button id="${executeButtonId}" class="policy-action-button execute">
+                            ✅ Execute Action
+                        </button>
+                        <button id="${dismissButtonId}" class="policy-action-button dismiss">
+                            ❌ Ignore
+                        </button>
+                    </div>
+                    
+                    <div class="suggestion-timestamp">
+                        <small>Detected: ${new Date(suggestion.triggered_at).toLocaleString()}</small>
+                    </div>
+                </div>
+            `;
+        });
+        
+        suggestionsHtml += `
+                </div>
+                
+                <div class="policy-footer">
+                    <small>💡 These suggestions are based on automatic analysis of your WordPress site status.</small>
+                </div>
+            </div>
+        `;
+        
+        contentDiv.innerHTML = suggestionsHtml;
+        suggestionsDiv.appendChild(contentDiv);
+        this.chatArea.appendChild(suggestionsDiv);
+        
+        // Agregar event listeners para todos los botones
+        policyContext.suggestions.forEach((suggestion, index) => {
+            const simulateButtonId = `policy_simulate_${suggestion.id}_${Date.now()}`;
+            const executeButtonId = `policy_execute_${suggestion.id}_${Date.now()}`;
+            const dismissButtonId = `policy_dismiss_${suggestion.id}_${Date.now()}`;
+            
+            const simulateButton = document.getElementById(simulateButtonId);
+            const executeButton = document.getElementById(executeButtonId);
+            const dismissButton = document.getElementById(dismissButtonId);
+            
+            if (simulateButton) {
+                simulateButton.addEventListener('click', (e) => {
+                    this.simulatePolicySuggestion(suggestion, e.target);
+                });
+            }
+            
+            if (executeButton) {
+                executeButton.addEventListener('click', (e) => {
+                    this.executePolicySuggestion(suggestion, e.target);
+                });
+            }
+            
+            if (dismissButton) {
+                dismissButton.addEventListener('click', (e) => {
+                    this.dismissPolicySuggestion(suggestion, e.target);
+                });
+            }
+        });
+        
+        this.scrollToBottom();
+    }
+    
+    // 🤖 POLICY ENGINE: Obtener icono de prioridad
+    getPriorityIcon(priority) {
+        const icons = {
+            'high': '🔴',
+            'medium': '🟡',
+            'low': '🟢'
+        };
+        return icons[priority] || '⚪';
+    }
+    
+    // 🤖 POLICY ENGINE: Obtener color de riesgo
+    getRiskColor(riskLevel) {
+        const colors = {
+            'read': '#27ca3f',
+            'write': '#ffbd2e',
+            'destructive': '#ff5f56'
+        };
+        return colors[riskLevel] || '#888';
+    }
+    
+    // 🤖 POLICY ENGINE: Obtener icono de riesgo
+    getRiskIcon(riskLevel) {
+        const icons = {
+            'read': '👁️',
+            'write': '✏️',
+            'destructive': '⚠️'
+        };
+        return icons[riskLevel] || '❓';
+    }
+    
+    // 🤖 POLICY ENGINE: Simular sugerencia de política
+    async simulatePolicySuggestion(suggestion, buttonElement) {
+        const originalText = buttonElement.textContent;
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = '<div class="loading"></div> Simulating...';
+        buttonElement.classList.add('loading-gradient');
+        
+        console.log('🧪 Simulating policy suggestion:', suggestion.suggested_ability.name);
+        
+        try {
+            const response = await fetch('/api/wp/execute-ability', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    abilityName: suggestion.suggested_ability.name,
+                    abilityInput: suggestion.suggested_ability.parameters,
+                    wordpressUrl: this.currentSite.url,
+                    authToken: this.currentSite.token,
+                    mode: 'simulate'
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `Error HTTP ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('✅ Policy simulation completed:', data);
+            
+            // Show simulation result
+            this.showPolicySimulationResult(suggestion, data);
+            
+            // Restaurar botón
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalText;
+            buttonElement.classList.remove('loading-gradient');
+            
+        } catch (error) {
+            console.error('❌ Error simulating policy suggestion:', error);
+            
+            const errorMessage = `
+                <div class="policy-simulation-error">
+                    <strong>❌ Simulation error for ${suggestion.title}</strong><br>
+                    ${error.message}
+                </div>
+            `;
+            
+            this.addMessage('assistant', errorMessage);
+            
+            // Restaurar botón
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalText;
+            buttonElement.classList.remove('loading-gradient');
+        }
+    }
+    
+    // 🤖 POLICY ENGINE: Ejecutar sugerencia de política
+    async executePolicySuggestion(suggestion, buttonElement) {
+        const originalText = buttonElement.textContent;
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = '<div class="loading"></div> Executing...';
+        buttonElement.classList.add('loading-gradient');
+        
+        console.log('⚡ Executing policy suggestion:', suggestion.suggested_ability.name);
+        
+        try {
+            const response = await fetch('/api/wp/execute-ability', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    abilityName: suggestion.suggested_ability.name,
+                    abilityInput: suggestion.suggested_ability.parameters,
+                    wordpressUrl: this.currentSite.url,
+                    authToken: this.currentSite.token,
+                    mode: 'execute'
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `Error HTTP ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('✅ Policy execution completed:', data);
+            
+            // Show execution result
+            const resultMessage = `
+                <div class="policy-execution-result">
+                    <div class="result-header">
+                        <strong>✅ Action completed: ${suggestion.title}</strong>
+                    </div>
+                    <div class="result-content">
+                        ${this.formatFunctionResult(data.ability_result)}
+                    </div>
+                    <div class="result-meta">
+                        <small>Executed on ${new Date().toLocaleString()}</small>
+                    </div>
+                </div>
+            `;
+            
+            this.addMessage('assistant', resultMessage);
+            
+            // Change button to completed
+            buttonElement.textContent = '✅ Completed';
+            buttonElement.classList.remove('loading-gradient');
+            buttonElement.style.backgroundColor = '#27ca3f';
+            
+        } catch (error) {
+            console.error('❌ Error executing policy suggestion:', error);
+            
+            const errorMessage = `
+                <div class="policy-execution-error">
+                    <strong>❌ Error executing ${suggestion.title}</strong><br>
+                    ${error.message}
+                </div>
+            `;
+            
+            this.addMessage('assistant', errorMessage);
+            
+            // Restaurar botón
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalText;
+            buttonElement.classList.remove('loading-gradient');
+        }
+    }
+    
+    // 🤖 POLICY ENGINE: Ignorar sugerencia de política
+    dismissPolicySuggestion(suggestion, buttonElement) {
+        console.log('❌ User ignored policy suggestion:', suggestion.policy_id);
+        
+        // Show confirmation message
+        const dismissMessage = `
+            <div class="policy-dismissal">
+                <strong>❌ Suggestion ignored: ${suggestion.title}</strong><br>
+                <small>You can re-evaluate policies later if you change your mind.</small>
+            </div>
+        `;
+        
+        this.addMessage('assistant', dismissMessage);
+        
+        // Ocultar la tarjeta de sugerencia
+        const suggestionCard = buttonElement.closest('.policy-suggestion-card');
+        if (suggestionCard) {
+            suggestionCard.style.opacity = '0.5';
+            suggestionCard.style.pointerEvents = 'none';
+        }
+    }
+    
+    // 🤖 POLICY ENGINE: Show policy simulation result
+    showPolicySimulationResult(suggestion, simulationData) {
+        const simulationMessage = `
+            <div class="policy-simulation-result">
+                <div class="simulation-header">
+                    <strong>🧪 Simulation completed: ${suggestion.title}</strong>
+                </div>
+                
+                <div class="simulation-content">
+                    <div class="simulation-data">
+                        ${this.formatSimulationResult(simulationData.simulation_result)}
+                    </div>
+                    
+                    ${simulationData.impact_report ? `
+                    <div class="impact-report">
+                        <h4>📊 Impact Analysis:</h4>
+                        <div class="impact-details">
+                            ${this.formatImpactReport(simulationData.impact_report)}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+                
+                <div class="simulation-note">
+                    <small>💡 This was a simulation - no real changes were made to your site.</small>
+                </div>
+            </div>
+        `;
+        
+        this.addMessage('assistant', simulationMessage);
+    }
+    
+    // 🤖 POLICY ENGINE: Format impact report
+    formatImpactReport(impactReport) {
+        if (!impactReport) return 'No impact report available';
+        
+        let formatted = '';
+        
+        if (impactReport.risk_assessment) {
+            formatted += `<div class="impact-section">
+                <strong>Risk Assessment:</strong> ${impactReport.risk_assessment.description}<br>
+                <strong>Level:</strong> ${impactReport.risk_assessment.level}<br>
+            </div>`;
+        }
+        
+        if (impactReport.predicted_changes) {
+            formatted += `<div class="impact-section">
+                <strong>Predicted Changes:</strong> ${impactReport.predicted_changes.description || 'See technical details'}<br>
+            </div>`;
+        }
+        
+        if (impactReport.resources_affected && impactReport.resources_affected.length > 0) {
+            formatted += `<div class="impact-section">
+                <strong>Affected Resources:</strong><br>
+                <ul>
+                    ${impactReport.resources_affected.map(resource => 
+                        `<li>${resource.description} (${resource.type})</li>`
+                    ).join('')}
+                </ul>
+            </div>`;
+        }
+        
+        if (impactReport.reversibility) {
+            formatted += `<div class="impact-section">
+                <strong>Reversibility:</strong> ${impactReport.reversibility.reversible ? '✅ Reversible' : '❌ Irreversible'}<br>
+                <small>${impactReport.reversibility.reason}</small>
+            </div>`;
+        }
+        
+        if (impactReport.recommendations && impactReport.recommendations.length > 0) {
+            formatted += `<div class="impact-section">
+                <strong>Recommendations:</strong><br>
+                <ul>
+                    ${impactReport.recommendations.map(rec => 
+                        `<li><strong>${rec.type}:</strong> ${rec.message}</li>`
+                    ).join('')}
+                </ul>
+            </div>`;
+        }
+        
+        return formatted || 'Impact report not available';
+    }
+
     addPreviewCard(geminiResponse) {
         console.log('🎨 addPreviewCard llamado con:', { 
             is_conversational: geminiResponse.is_conversational, 
             has_command: !!geminiResponse.command,
+            has_function_call_pending: !!geminiResponse.function_call_pending,
             explanation_length: geminiResponse.explanation?.length 
         });
         
@@ -935,6 +1788,148 @@ class GeminiWPCLI {
         
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
+        
+        // 🛡️ ABILITIES API: Manejar function calls PENDIENTES de confirmación
+        if (geminiResponse.function_call_pending) {
+            console.log('⏸️ Pending function call detected');
+            
+            const renderedExplanation = this.renderMarkdown(geminiResponse.explanation);
+            const functionCall = geminiResponse.function_call_pending;
+            
+            // Generar ID único para los botones de confirmación
+            const simulateButtonId = 'simulate_ability_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            const confirmButtonId = 'confirm_ability_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            const cancelButtonId = 'cancel_ability_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            // Formatear parámetros para mostrar al usuario
+            const parametersDisplay = Object.keys(functionCall.args).length > 0 
+                ? Object.entries(functionCall.args).map(([key, value]) => 
+                    `<strong>${key}:</strong> ${typeof value === 'object' ? JSON.stringify(value) : value}`
+                  ).join('<br>')
+                : 'Sin parámetros';
+            
+            contentDiv.innerHTML = `
+                <div class="preview-card function-call-pending">
+                    <div class="preview-section">
+                        <div class="preview-icon">🤖</div>
+                        <div class="preview-label">Gemini AI wants to execute:</div>
+                        <div class="preview-content">${renderedExplanation}</div>
+                    </div>
+                    
+                    <div class="preview-section">
+                        <div class="preview-icon">🔧</div>
+                        <div class="preview-label">Action to Execute:</div>
+                        <div class="preview-content">
+                            <div class="ability-name">${functionCall.name}</div>
+                            <div class="ability-description">${functionCall.description}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-section">
+                        <div class="preview-icon">📋</div>
+                        <div class="preview-label">Parameters:</div>
+                        <div class="preview-content">
+                            <div class="ability-parameters">${parametersDisplay}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-section">
+                        <div class="preview-icon">🧪</div>
+                        <div class="preview-label">Explainability & Dry-Run:</div>
+                        <div class="preview-content">
+                            <div class="explainability-info">
+                                <strong>🧠 Principle:</strong> "Never execute something you can't explain. Never explain something you can't simulate."
+                                <br><br>
+                                <strong>🧪 Simulation:</strong> You can simulate this action first to see exactly what will happen, what will change and what risks exist.
+                                <br><br>
+                                <strong>✅ Execution:</strong> Only after fully understanding the impact, you can execute the real action.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="confirmation-buttons">
+                        <button id="${simulateButtonId}" class="simulate-ability-button">
+                            🧪 Simulate First
+                        </button>
+                        <button id="${confirmButtonId}" class="confirm-ability-button">
+                            ✅ Execute Directly
+                        </button>
+                        <button id="${cancelButtonId}" class="cancel-ability-button">
+                            ❌ Cancel
+                        </button>
+                    </div>
+                    
+                    <div class="confirmation-note">
+                        <small>💡 <strong>Recommendation:</strong> Use "Simulate First" to understand the impact before executing.</small>
+                    </div>
+                </div>
+            `;
+            
+            cardDiv.appendChild(contentDiv);
+            this.chatArea.appendChild(cardDiv);
+            
+            // Agregar event listeners para los botones
+            document.getElementById(simulateButtonId).addEventListener('click', (e) => {
+                this.simulateAbility(functionCall, e.target);
+            });
+            
+            document.getElementById(confirmButtonId).addEventListener('click', (e) => {
+                this.executeAbility(functionCall, e.target);
+            });
+            
+            document.getElementById(cancelButtonId).addEventListener('click', (e) => {
+                this.cancelAbility(e.target);
+            });
+            
+            this.scrollToBottom();
+            return;
+        }
+        
+        // 🆕 ABILITIES API: Manejar respuestas con function calls YA EJECUTADOS (para compatibilidad)
+        if (geminiResponse.function_call && geminiResponse.function_call.result) {
+            console.log('⚡ Respuesta con function call ejecutado detectada');
+            
+            const renderedExplanation = this.renderMarkdown(geminiResponse.explanation);
+            
+            contentDiv.innerHTML = `
+                <div class="preview-card function-call-executed">
+                    <div class="preview-section">
+                        <div class="preview-icon">✅</div>
+                        <div class="preview-label">Action Completed:</div>
+                        <div class="preview-content">${renderedExplanation}</div>
+                    </div>
+                    
+                    <div class="preview-section">
+                        <div class="preview-icon">🔧</div>
+                        <div class="preview-label">Function:</div>
+                        <div class="preview-content">
+                            <div class="function-name">${geminiResponse.function_call.name}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-section">
+                        <div class="preview-icon">📊</div>
+                        <div class="preview-label">Result:</div>
+                        <div class="preview-content">
+                            <div class="function-result">${this.formatFunctionResult(geminiResponse.function_call.result)}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-section">
+                        <div class="preview-icon">🚀</div>
+                        <div class="preview-label">Method:</div>
+                        <div class="preview-content">
+                            <div class="execution-method">WordPress Abilities API</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            cardDiv.appendChild(contentDiv);
+            this.chatArea.appendChild(cardDiv);
+            this.scrollToBottom();
+            return;
+        }
         
         // Verificar si es una respuesta conversacional
         if (geminiResponse.is_conversational || !geminiResponse.command) {
@@ -983,13 +1978,13 @@ class GeminiWPCLI {
             <div class="preview-card">
                 <div class="preview-section">
                     <div class="preview-icon">🤖</div>
-                    <div class="preview-label">Explicación:</div>
+                    <div class="preview-label">Explanation:</div>
                     <div class="preview-content">${renderedExplanation}</div>
                 </div>
                 
                 <div class="preview-section">
                     <div class="preview-icon">💻</div>
-                    <div class="preview-label">Comando:</div>
+                    <div class="preview-label">Command:</div>
                     <div class="preview-content">
                         <div class="command-code">${geminiResponse.command}</div>
                     </div>
@@ -997,11 +1992,11 @@ class GeminiWPCLI {
                 
                 <div class="preview-section">
                     <div class="preview-icon">🛡️</div>
-                    <div class="preview-label">Seguridad:</div>
+                    <div class="preview-label">Security:</div>
                     <div class="preview-content">
                         <div class="security-indicator ${geminiResponse.is_safe ? 'security-safe' : 'security-unsafe'}">
-                            ${geminiResponse.is_safe ? '✅ Comando seguro' : '⚠️ Comando requiere precaución'}
-                            ${!geminiResponse.is_safe ? '<br><small>Este comando puede modificar datos importantes</small>' : ''}
+                            ${geminiResponse.is_safe ? '✅ Safe command' : '⚠️ Command requires caution'}
+                            ${!geminiResponse.is_safe ? '<br><small>This command may modify important data</small>' : ''}
                         </div>
                     </div>
                 </div>
@@ -1009,7 +2004,7 @@ class GeminiWPCLI {
                 ${geminiResponse.agent_thought ? `
                 <div class="preview-section">
                     <div class="preview-icon">🧠</div>
-                    <div class="preview-label">Análisis IA:</div>
+                    <div class="preview-label">AI Analysis:</div>
                     <div class="preview-content">
                         <small style="color: #888; font-style: italic;">${geminiResponse.agent_thought}</small>
                     </div>
@@ -1017,7 +2012,7 @@ class GeminiWPCLI {
                 ` : ''}
                 
                 <button id="${buttonId}" class="execute-button">
-                    Confirmar Ejecución
+                    Confirm Execution
                 </button>
             </div>
         `;
@@ -1033,46 +2028,480 @@ class GeminiWPCLI {
         this.scrollToBottom();
     }
 
+    // 🛡️ ABILITIES API: Ejecutar ability después de confirmación explícita
+    async executeAbility(functionCall, buttonElement) {
+        const originalText = buttonElement.textContent;
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = '<div class="loading"></div> Executing...';
+        buttonElement.classList.add('loading-gradient');
+        
+        // Disable cancel button too
+        const cancelButton = buttonElement.parentElement.querySelector('.cancel-ability-button');
+        if (cancelButton) {
+            cancelButton.disabled = true;
+            cancelButton.style.opacity = '0.5';
+        }
+        
+        console.log('⚡ Executing confirmed ability:', functionCall.name);
+        
+        try {
+            const response = await fetch('/api/wp/execute-ability', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    abilityName: functionCall.name,
+                    abilityInput: functionCall.args,
+                    wordpressUrl: functionCall.site_context.wordpressUrl,
+                    authToken: functionCall.site_context.authToken,
+                    mode: 'execute' // Ejecución real
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `Error HTTP ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('✅ Ability ejecutada exitosamente:', data);
+            
+            // Mostrar resultado de la ejecución
+            const resultMessage = `
+                <div class="ability-execution-result">
+                    <div class="result-header">
+                        <strong>✅ Action completed: ${functionCall.name}</strong>
+                    </div>
+                    <div class="result-content">
+                        ${this.formatFunctionResult(data.ability_result)}
+                    </div>
+                    <div class="result-meta">
+                        <small>Executed on ${new Date().toLocaleString()}</small>
+                    </div>
+                </div>
+            `;
+            
+            this.addMessage('assistant', resultMessage);
+            
+            // Hide confirmation buttons
+            const confirmationButtons = buttonElement.parentElement;
+            if (confirmationButtons) {
+                confirmationButtons.style.display = 'none';
+            }
+            
+        } catch (error) {
+            console.error('❌ Error ejecutando ability:', error);
+            
+            // Show error to user
+            const errorMessage = `
+                <div class="ability-execution-error">
+                    <div class="error-header">
+                        <strong>❌ Error executing ${functionCall.name}</strong>
+                    </div>
+                    <div class="error-content">
+                        ${error.message}
+                    </div>
+                    <div class="error-suggestion">
+                        <small>Check the connection with WordPress and try again.</small>
+                    </div>
+                </div>
+            `;
+            
+            this.addMessage('assistant', errorMessage);
+            
+            // Restore buttons to allow retry
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalText;
+            buttonElement.classList.remove('loading-gradient');
+            
+            if (cancelButton) {
+                cancelButton.disabled = false;
+                cancelButton.style.opacity = '1';
+            }
+        }
+    }
+    
+    // 🧪 DRY-RUN: Simular ability antes de ejecución
+    async simulateAbility(functionCall, buttonElement) {
+        const originalText = buttonElement.textContent;
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = '<div class="loading"></div> Simulating...';
+        buttonElement.classList.add('loading-gradient');
+        
+        console.log('🧪 Simulating ability:', functionCall.name);
+        
+        try {
+            const response = await fetch('/api/wp/execute-ability', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    abilityName: functionCall.name,
+                    abilityInput: functionCall.args,
+                    wordpressUrl: functionCall.site_context.wordpressUrl,
+                    authToken: functionCall.site_context.authToken,
+                    mode: 'simulate' // Modo simulación
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `Error HTTP ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('✅ Simulación completada:', data);
+            
+            // Show simulation result with impact analysis
+            this.showSimulationResult(functionCall, data);
+            
+            // Restaurar botón
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalText;
+            buttonElement.classList.remove('loading-gradient');
+            
+        } catch (error) {
+            console.error('❌ Error en simulación:', error);
+            
+            // Mostrar error de simulación
+            const errorMessage = `
+                <div class="simulation-error">
+                    <div class="error-header">
+                        <strong>❌ Error en simulación de ${functionCall.name}</strong>
+                    </div>
+                    <div class="error-content">
+                        ${error.message}
+                    </div>
+                    <div class="error-suggestion">
+                        <small>La simulación falló, pero aún puedes ejecutar la acción real si estás seguro.</small>
+                    </div>
+                </div>
+            `;
+            
+            this.addMessage('assistant', errorMessage);
+            
+            // Restaurar botón
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalText;
+            buttonElement.classList.remove('loading-gradient');
+        }
+    }
+    
+    // 🧪 DRY-RUN: Show simulation result with impact analysis
+    showSimulationResult(functionCall, simulationData) {
+        const impactReport = simulationData.impact_report;
+        const simulationResult = simulationData.simulation_result;
+        
+        // Generar ID único para los nuevos botones
+        const executeButtonId = 'execute_after_sim_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        const simulateAgainButtonId = 'simulate_again_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        const cancelButtonId = 'cancel_after_sim_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        
+        // Format affected resources
+        const resourcesHtml = impactReport?.resources_affected ? 
+            impactReport.resources_affected.map(resource => 
+                `<div class="resource-item risk-${resource.risk}">
+                    <strong>${resource.type}:</strong> ${resource.description}
+                    <span class="risk-badge risk-${resource.risk}">${resource.risk}</span>
+                </div>`
+            ).join('') : 
+            '<div class="resource-item">No specific resources identified</div>';
+        
+        // Format recommendations
+        const recommendationsHtml = impactReport?.recommendations ? 
+            impactReport.recommendations.map(rec => 
+                `<div class="recommendation-item priority-${rec.priority}">
+                    <span class="priority-badge priority-${rec.priority}">${rec.priority}</span>
+                    ${rec.message}
+                </div>`
+            ).join('') : 
+            '<div class="recommendation-item">No specific recommendations</div>';
+        
+        const simulationMessage = `
+            <div class="simulation-result-display">
+                <div class="simulation-header">
+                    <h3>🧪 Simulation Result: ${functionCall.name}</h3>
+                    <div class="simulation-badge">SIMULATION - No real changes</div>
+                </div>
+                
+                <div class="impact-analysis">
+                    <div class="impact-section">
+                        <h4>📊 Impact Analysis</h4>
+                        <div class="risk-assessment">
+                            <div class="risk-level risk-${impactReport?.risk_assessment?.level || 'unknown'}">
+                                <strong>Risk Level:</strong> ${impactReport?.risk_assessment?.level || 'Unknown'}
+                            </div>
+                            <div class="risk-description">
+                                ${impactReport?.risk_assessment?.description || 'No description available'}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="impact-section">
+                        <h4>🎯 What will happen</h4>
+                        <div class="what-will-happen">
+                            ${impactReport?.human_explanation?.what_will_happen || 'WordPress action'}
+                        </div>
+                    </div>
+                    
+                    <div class="impact-section">
+                        <h4>🔄 What will change</h4>
+                        <div class="what-changes">
+                            ${impactReport?.human_explanation?.what_changes || 'Changes according to specified parameters'}
+                        </div>
+                    </div>
+                    
+                    <div class="impact-section">
+                        <h4>🛡️ What will NOT change</h4>
+                        <div class="what-wont-change">
+                            ${impactReport?.human_explanation?.what_wont_change || 'Other site areas will remain intact'}
+                        </div>
+                    </div>
+                    
+                    <div class="impact-section">
+                        <h4>📋 Affected Resources</h4>
+                        <div class="resources-affected">
+                            ${resourcesHtml}
+                        </div>
+                    </div>
+                    
+                    <div class="impact-section">
+                        <h4>🔄 Reversibility</h4>
+                        <div class="reversibility ${impactReport?.reversibility?.reversible ? 'reversible' : 'not-reversible'}">
+                            <strong>${impactReport?.reversibility?.reversible ? '✅ Reversible' : '⚠️ Not reversible'}</strong>
+                            <div class="reversibility-reason">
+                                ${impactReport?.reversibility?.reason || 'No reversibility information'}
+                            </div>
+                            ${impactReport?.reversibility?.recommendation ? 
+                                `<div class="reversibility-recommendation">💡 ${impactReport.reversibility.recommendation}</div>` : 
+                                ''
+                            }
+                        </div>
+                    </div>
+                    
+                    <div class="impact-section">
+                        <h4>💡 Recommendations</h4>
+                        <div class="recommendations">
+                            ${recommendationsHtml}
+                        </div>
+                    </div>
+                    
+                    <div class="impact-section">
+                        <h4>🔍 Simulation Result</h4>
+                        <div class="simulation-data">
+                            ${this.formatSimulationResult(simulationResult)}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="simulation-actions">
+                    <h4>What do you want to do now?</h4>
+                    <div class="simulation-buttons">
+                        <button id="${simulateAgainButtonId}" class="simulate-again-button">
+                            🧪 Simulate Again
+                        </button>
+                        <button id="${executeButtonId}" class="execute-after-simulation-button">
+                            ✅ Execute Real Action
+                        </button>
+                        <button id="${cancelButtonId}" class="cancel-after-simulation-button">
+                            ❌ Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        this.addMessage('assistant', simulationMessage);
+        
+        // Agregar event listeners para los nuevos botones
+        document.getElementById(executeButtonId).addEventListener('click', (e) => {
+            this.executeAbility(functionCall, e.target);
+        });
+        
+        document.getElementById(simulateAgainButtonId).addEventListener('click', (e) => {
+            this.simulateAbility(functionCall, e.target);
+        });
+        
+        document.getElementById(cancelButtonId).addEventListener('click', (e) => {
+            this.cancelAbility(e.target);
+        });
+        
+        this.scrollToBottom();
+    }
+    
+    // 🧪 DRY-RUN: Formatear resultado de simulación
+    formatSimulationResult(simulationResult) {
+        if (!simulationResult) return 'Sin resultado de simulación';
+        
+        if (typeof simulationResult === 'string') {
+            return simulationResult;
+        }
+        
+        if (typeof simulationResult === 'object') {
+            // Formatear objetos de simulación de manera legible
+            let formatted = '';
+            
+            if (simulationResult.status) {
+                formatted += `<strong>Status:</strong> ${simulationResult.status}<br>`;
+            }
+            
+            if (simulationResult.message) {
+                formatted += `<strong>Message:</strong> ${simulationResult.message}<br>`;
+            }
+            
+            if (simulationResult.simulation_note) {
+                formatted += `<div class="simulation-note">📝 ${simulationResult.simulation_note}</div>`;
+            }
+            
+            if (simulationResult.changes_description) {
+                formatted += `<strong>Changes:</strong> ${simulationResult.changes_description}<br>`;
+            }
+            
+            if (simulationResult.affected_items !== undefined) {
+                formatted += `<strong>Affected items:</strong> ${simulationResult.affected_items}<br>`;
+            }
+            
+            // Si no hay formato específico, mostrar JSON estructurado
+            if (!formatted) {
+                formatted = '<pre>' + JSON.stringify(simulationResult, null, 2) + '</pre>';
+            }
+            
+            return formatted;
+        }
+        
+        return String(simulationResult);
+    }
+    
+    // 🛡️ ABILITIES API: Cancel ability execution
+    cancelAbility(buttonElement) {
+        console.log('❌ User cancelled ability execution');
+        
+        // Show cancellation message
+        const cancelMessage = `
+            <div class="ability-execution-cancelled">
+                <div class="cancel-header">
+                    <strong>❌ Action cancelled</strong>
+                </div>
+                <div class="cancel-content">
+                    No action was executed on your WordPress site.
+                </div>
+            </div>
+        `;
+        
+        this.addMessage('assistant', cancelMessage);
+        
+        // Hide confirmation buttons
+        const confirmationButtons = buttonElement.parentElement;
+        if (confirmationButtons) {
+            confirmationButtons.style.display = 'none';
+        }
+    }
+
+    // 🆕 ABILITIES API: Format function call result
+    formatFunctionResult(result) {
+        if (!result) return 'No result';
+        
+        if (typeof result === 'string') {
+            return result;
+        }
+        
+        if (typeof result === 'object') {
+            // Format objects in a readable way
+            if (result.status && result.wordpress_version) {
+                // Site Health result
+                let formatted = `<strong>Status:</strong> ${result.status}<br>`;
+                formatted += `<strong>WordPress:</strong> ${result.wordpress_version}<br>`;
+                formatted += `<strong>PHP:</strong> ${result.php_version}<br>`;
+                
+                if (result.email_test) {
+                    formatted += `<strong>Email:</strong> ${result.email_test.status}<br>`;
+                }
+                
+                formatted += `<strong>Active plugins:</strong> ${result.active_plugins}<br>`;
+                formatted += `<strong>Active theme:</strong> ${result.active_theme}<br>`;
+                
+                return formatted;
+            }
+            
+            // Generic format for other objects
+            return '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+        }
+        
+        return String(result);
+    }
+
     async executeCommand(command, buttonElement, useServerInfo = false) {
         const originalText = buttonElement.textContent;
         buttonElement.disabled = true;
-        buttonElement.innerHTML = '<div class="loading"></div> Ejecutando...';
+        buttonElement.innerHTML = '<div class="loading"></div> Executing...';
         buttonElement.classList.add('loading-gradient');
+
+        // 🧠 Track command execution start
+        const executionStart = Date.now();
+        this.addActionToMemory({
+            type: 'command_execution_start',
+            description: `Starting execution: ${command}`,
+            command: command,
+            use_server_info: useServerInfo,
+            success: null // Will be updated when complete
+        });
 
         try {
             let response;
             
             if (useServerInfo) {
-                // Usar endpoint de información del servidor
+                // Use server information endpoint
                 response = await this.getServerInfo();
             } else {
                 // Ejecutar comando normal
                 response = await this.callWordPressAPI(command);
             }
             
-            // 🔧 Auto-healing: Verificar si hay errores en la respuesta
+            // 🧠 Track successful execution
+            const executionTime = Date.now() - executionStart;
+            this.addActionToMemory({
+                type: 'command_executed',
+                description: `Successfully executed: ${command}`,
+                command: command,
+                execution_time_ms: executionTime,
+                response_status: response?.status || 'success',
+                success: true
+            });
+            
+            // 🔧 Auto-healing: Check if there are errors in the response
             const hasError = this.detectCommandError(response);
             
             if (hasError) {
-                console.log('🔧 Auto-healing: Error detectado, iniciando recuperación automática...');
+                console.log('🔧 Auto-healing: Error detected, starting automatic recovery...');
                 
-                // Mostrar resultado del error primero
+                // 🧠 Track error detection
+                this.addActionToMemory({
+                    type: 'error_detected',
+                    description: `Error detected in command response: ${command}`,
+                    command: command,
+                    error_details: response?.message || 'Unknown error',
+                    success: false
+                });
+                
+                // Show error result first
                 this.addCommandResult(command, response, useServerInfo);
                 
-                // Cambiar botón a estado de error
-                buttonElement.textContent = '❌ Error detectado';
+                // Change button to error state
+                buttonElement.textContent = '❌ Error detected';
                 buttonElement.classList.remove('loading-gradient');
                 buttonElement.style.backgroundColor = '#ff5f56';
                 
-                // Iniciar proceso de auto-healing
+                // Start auto-healing process
                 await this.performAutoHealing(command, response);
                 
             } else {
-                // Mostrar resultado exitoso
+                // Show successful result
                 this.addCommandResult(command, response, useServerInfo);
                 
-                // Cambiar botón a completado
-                buttonElement.textContent = '✅ Ejecutado';
+                // Change button to completed
+                buttonElement.textContent = '✅ Executed';
                 buttonElement.classList.remove('loading-gradient');
                 buttonElement.style.backgroundColor = '#27ca3f';
             }
@@ -1080,11 +2509,22 @@ class GeminiWPCLI {
         } catch (error) {
             console.log('🔧 Auto-healing: Excepción capturada, iniciando recuperación...');
             
-            // Mostrar error original
-            this.addErrorMessage('Error al ejecutar comando: ' + error.message);
+            // 🧠 Track execution error
+            const executionTime = Date.now() - executionStart;
+            this.addActionToMemory({
+                type: 'command_execution_error',
+                description: `Command execution failed: ${command}`,
+                command: command,
+                execution_time_ms: executionTime,
+                error: error.message,
+                success: false
+            });
             
-            // Cambiar botón a estado de error
-            buttonElement.textContent = '❌ Error de conexión';
+            // Mostrar error original
+            this.addErrorMessage('Error executing command: ' + error.message);
+            
+            // Change button to error state
+            buttonElement.textContent = '❌ Connection error';
             buttonElement.classList.remove('loading-gradient');
             buttonElement.style.backgroundColor = '#ff5f56';
             
@@ -1100,7 +2540,7 @@ class GeminiWPCLI {
         // Verificar status de error explícito
         if (response.status === 'error') return true;
         
-        // Verificar mensajes de error comunes en la respuesta
+        // Check common error messages in response
         const errorMessage = (response.response || response.message || '').toLowerCase();
         
         const errorPatterns = [
@@ -1133,14 +2573,14 @@ class GeminiWPCLI {
         try {
             console.log('🔧 Iniciando auto-healing para comando:', originalCommand);
             
-            // Mostrar mensaje de que se está analizando el error
-            this.addRecoveryMessage('🔧 Analizando el error y buscando soluciones...');
+            // Show message that error is being analyzed
+            this.addRecoveryMessage('🔧 Analyzing the error and looking for solutions...');
             
-            // Extraer mensaje de error
+            // Extract error message
             const errorMessage = this.extractErrorMessage(errorResponse);
             
             // Crear prompt invisible para Gemini
-            const healingPrompt = `El comando anterior falló con este error: ${errorMessage}. Analiza por qué falló y sugiere al usuario una solución o un comando alternativo.`;
+            const healingPrompt = `The previous command failed with this error: ${errorMessage}. Analyze why it failed and suggest a solution or alternative command to the user.`;
             
             console.log('🔧 Enviando a Gemini para análisis:', healingPrompt);
             
@@ -1149,15 +2589,15 @@ class GeminiWPCLI {
             
             if (geminiResponse && geminiResponse.explanation) {
                 // Mostrar sugerencia de recuperación
-                this.addRecoveryMessage(`🤖 **Asistente de Recuperación**\n\n${geminiResponse.explanation}`, geminiResponse);
+                this.addRecoveryMessage(`🤖 **Recovery Assistant**\n\n${geminiResponse.explanation}`, geminiResponse);
             } else {
                 // Fallback si Gemini no responde
-                this.addRecoveryMessage('🔧 No pude analizar el error automáticamente. Revisa el mensaje de error anterior y verifica la configuración.');
+                this.addRecoveryMessage('🔧 I could not analyze the error automatically. Review the previous error message and verify the configuration.');
             }
             
         } catch (error) {
-            console.error('❌ Error en auto-healing:', error);
-            this.addRecoveryMessage('🔧 El sistema de recuperación automática no está disponible en este momento.');
+            console.error('❌ Error in auto-healing:', error);
+            this.addRecoveryMessage('🔧 The automatic recovery system is not available at this time.');
         }
     }
 
@@ -1185,9 +2625,9 @@ class GeminiWPCLI {
             // 🔑 Añadir API Key global si existe
             if (this.hasGlobalGeminiApiKey()) {
                 headers['x-user-gemini-key'] = this.globalGeminiApiKey;
-                console.log('🔑 Auto-healing usando API Key global personalizada');
+                console.log('🔑 Auto-healing using custom global API Key');
             } else {
-                console.log('🔑 Auto-healing usando API Key del servidor (compartida)');
+                console.log('🔑 Auto-healing using server API Key (shared)');
             }
             
             // Llamar al endpoint de Gemini (sin historial para auto-healing)
@@ -1217,23 +2657,23 @@ class GeminiWPCLI {
             }
             
         } catch (error) {
-            console.error('❌ Error en auto-healing con Gemini:', error);
+            console.error('❌ Error in auto-healing with Gemini:', error);
             
             // Fallback para auto-healing
             return this.getHealingFallback(healingPrompt);
         }
     }
 
-    // 🔧 Fallback para auto-healing cuando Gemini no está disponible
+    // 🔧 Fallback for auto-healing when Gemini is not available
     getHealingFallback(healingPrompt) {
-        console.log('🔧 Usando fallback para auto-healing');
+        console.log('🔧 Using fallback for auto-healing');
         
         const lowerPrompt = healingPrompt.toLowerCase();
         
         if (lowerPrompt.includes('permission denied') || lowerPrompt.includes('permiso denegado')) {
             return {
                 command: 'wp user list --role=administrator',
-                explanation: 'Error de permisos detectado. Verifica que tengas permisos de administrador y que el token de autenticación sea válido. Puedes revisar los usuarios administradores con el comando sugerido.',
+                explanation: 'Permission error detected. Verify that you have administrator permissions and that the authentication token is valid. You can check administrator users with the suggested command.',
                 is_safe: true
             };
         } else if (lowerPrompt.includes('already exists') || lowerPrompt.includes('ya existe')) {
@@ -1257,7 +2697,7 @@ class GeminiWPCLI {
         }
     }
 
-    // 🔧 Extraer mensaje de error limpio
+    // 🔧 Extract clean error message
     extractErrorMessage(errorResponse) {
         if (typeof errorResponse === 'string') return errorResponse;
         
@@ -1268,7 +2708,7 @@ class GeminiWPCLI {
         return 'Error desconocido en la ejecución del comando';
     }
 
-    // 🔧 Mostrar mensaje de recuperación con estilo especial
+    // 🔧 Show recovery message with special style
     addRecoveryMessage(message, geminiResponse = null) {
         const recoveryDiv = document.createElement('div');
         recoveryDiv.className = 'message recovery';
@@ -1314,7 +2754,7 @@ class GeminiWPCLI {
             }
             
         } else {
-            // Mensaje simple sin comando
+            // Simple message without command
             contentDiv.innerHTML = `
                 <div class="recovery-card">
                     <div class="recovery-header">
@@ -1374,10 +2814,10 @@ class GeminiWPCLI {
         }
         
         if (isServerInfo) {
-            // Formato especial para información del servidor
+            // Special format for server information
             contentDiv.innerHTML = `
                 <div style="margin-bottom: 12px;">
-                    <strong>🖥️ Información del Servidor WordPress</strong>
+                    <strong>🖥️ WordPress Server Information</strong>
                 </div>
                 
                 <div class="command-output syntax-highlight" data-language="server-info">${this.formatServerInfo(response)}</div>
@@ -1393,8 +2833,8 @@ class GeminiWPCLI {
                 
                 ${response.exec_method ? `
                     <div style="margin-bottom: 8px; font-size: 12px; color: #888;">
-                        Método: <span class="highlight-keyword">${response.exec_method}</span> | Estado: <span style="color: ${statusColor}">${response.status}</span>
-                        ${response.server_capabilities ? `| Servidor: <span class="highlight-info">Compatible</span>` : ''}
+                        Method: <span class="highlight-keyword">${response.exec_method}</span> | Status: <span style="color: ${statusColor}">${response.status}</span>
+                        ${response.server_capabilities ? `| Server: <span class="highlight-info">Compatible</span>` : ''}
                     </div>
                 ` : ''}
                 
@@ -1425,27 +2865,27 @@ class GeminiWPCLI {
 <strong>📊 Información del Sistema:</strong>
 • WordPress: <span class="highlight-version">${info.server_info?.wordpress_version || 'N/A'}</span>
 • PHP: <span class="highlight-version">${info.server_info?.php_version || 'N/A'}</span>
-• Servidor: <span class="highlight-keyword">${info.server_info?.server_software || 'N/A'}</span>
+• Server: <span class="highlight-keyword">${info.server_info?.server_software || 'N/A'}</span>
 • OS: <span class="highlight-keyword">${info.server_info?.operating_system || 'N/A'}</span>
 
-<strong>⚙️ Capacidades de Ejecución:</strong>
-• shell_exec: ${info.execution_capabilities?.shell_exec ? '<span class="status-indicator success">✅ Disponible</span>' : '<span class="status-indicator error">❌ Desactivado</span>'}
-• exec: ${info.execution_capabilities?.exec ? '<span class="status-indicator success">✅ Disponible</span>' : '<span class="status-indicator error">❌ Desactivado</span>'}
-• system: ${info.execution_capabilities?.system ? '<span class="status-indicator success">✅ Disponible</span>' : '<span class="status-indicator error">❌ Desactivado</span>'}
-• passthru: ${info.execution_capabilities?.passthru ? '<span class="status-indicator success">✅ Disponible</span>' : '<span class="status-indicator error">❌ Desactivado</span>'}
+<strong>⚙️ Execution Capabilities:</strong>
+• shell_exec: ${info.execution_capabilities?.shell_exec ? '<span class="status-indicator success">✅ Available</span>' : '<span class="status-indicator error">❌ Disabled</span>'}
+• exec: ${info.execution_capabilities?.exec ? '<span class="status-indicator success">✅ Available</span>' : '<span class="status-indicator error">❌ Disabled</span>'}
+• system: ${info.execution_capabilities?.system ? '<span class="status-indicator success">✅ Available</span>' : '<span class="status-indicator error">❌ Disabled</span>'}
+• passthru: ${info.execution_capabilities?.passthru ? '<span class="status-indicator success">✅ Available</span>' : '<span class="status-indicator error">❌ Disabled</span>'}
 
 <strong>🔧 WP-CLI:</strong>
-• Estado: ${info.wp_cli?.available ? '<span class="status-indicator success">✅ Instalado</span>' : '<span class="status-indicator error">❌ No disponible</span>'}
+• Status: ${info.wp_cli?.available ? '<span class="status-indicator success">✅ Installed</span>' : '<span class="status-indicator error">❌ Not available</span>'}
 • Ruta: <span class="highlight-path">${info.wp_cli?.path || 'N/A'}</span>
 • Versión: <span class="highlight-version">${info.wp_cli?.version || 'N/A'}</span>
-• Método: <span class="highlight-keyword">${info.wp_cli?.method || 'N/A'}</span>
+• Method: <span class="highlight-keyword">${info.wp_cli?.method || 'N/A'}</span>
 
 <strong>🛡️ Seguridad:</strong>
 • Safe Mode: <span class="highlight-keyword">${info.security_status?.safe_mode || 'N/A'}</span>
 • Open Basedir: <span class="highlight-info">${info.security_status?.open_basedir || 'N/A'}</span>
 • Funciones deshabilitadas: <span class="highlight-warning">${info.security_status?.disable_functions || 'Ninguna'}</span>
 
-<strong>💡 Método Recomendado:</strong> <span class="highlight-keyword">${info.recommended_method || 'N/A'}</span>
+<strong>💡 Recommended Method:</strong> <span class="highlight-keyword">${info.recommended_method || 'N/A'}</span>
         `.trim();
         
         return serverInfo;
@@ -1541,7 +2981,7 @@ class GeminiWPCLI {
 
     applySyntaxHighlighting(output) {
         return output
-            // Mensajes de estado
+            // Status messages
             .replace(/^(Error:|ERROR:)/gm, '<span class="highlight-error">❌ $1</span>')
             .replace(/^(Success:|SUCCESS:)/gm, '<span class="highlight-success">✅ $1</span>')
             .replace(/^(Warning:|WARNING:)/gm, '<span class="highlight-warning">⚠️ $1</span>')
@@ -1551,7 +2991,7 @@ class GeminiWPCLI {
             .replace(/(\d+\.\d+\.\d+)/g, '<span class="highlight-version">$1</span>')
             .replace(/(\d+\.\d+)/g, '<span class="highlight-number">$1</span>')
             
-            // Estados
+            // Status
             .replace(/(^|\s)(active|enabled)(\s|$)/gi, '$1<span class="highlight-active">$2</span>$3')
             .replace(/(^|\s)(inactive|disabled)(\s|$)/gi, '$1<span class="highlight-inactive">$2</span>$3')
             
@@ -1599,6 +3039,15 @@ class GeminiWPCLI {
             console.log('🧠 Enviando prompt a Gemini AI:', userMessage);
             console.log('🔧 Modo emulación:', this.emulationMode ? 'ACTIVADO' : 'DESACTIVADO');
             
+            // 🧠 Get enhanced session context
+            const sessionContext = this.getSessionContextForGemini();
+            console.log('🧠 Session context:', {
+                duration: sessionContext.session_duration_minutes + ' min',
+                messages: sessionContext.total_messages,
+                actions: sessionContext.recent_actions.length,
+                site: sessionContext.site_context?.siteName || 'None'
+            });
+            
             // Preparar contexto del sitio para Gemini
             const siteContext = {
                 wordpress_version: this.serverCapabilities?.server_info?.wordpress_version || 'Desconocido',
@@ -1607,14 +3056,12 @@ class GeminiWPCLI {
                 wp_cli_available: this.serverCapabilities?.wp_cli?.available || false,
                 recommended_method: this.serverCapabilities?.recommended_method || 'API nativa',
                 emulation_mode: this.emulationMode,
-                execution_capabilities: this.serverCapabilities?.execution_capabilities || {}
+                execution_capabilities: this.serverCapabilities?.execution_capabilities || {},
+                // 🧠 Add session context
+                session_context: sessionContext
             };
             
             console.log('📊 Contexto del sitio para Gemini:', siteContext);
-            
-            // 🧠 Preparar historial de conversación
-            const formattedHistory = this.getFormattedHistory();
-            console.log('🧠 Enviando historial de conversación:', formattedHistory ? 'Sí (' + this.chatHistory.length + ' mensajes)' : 'No');
             
             // Preparar headers
             const headers = {
@@ -1624,9 +3071,9 @@ class GeminiWPCLI {
             // 🔑 Añadir API Key global si existe
             if (this.hasGlobalGeminiApiKey()) {
                 headers['x-user-gemini-key'] = this.globalGeminiApiKey;
-                console.log('🔑 Usando API Key global personalizada');
+                console.log('🔑 Using custom global API Key');
             } else {
-                console.log('🔑 Usando API Key del servidor (compartida)');
+                console.log('🔑 Using server API Key (shared)');
             }
             
             // Llamar al endpoint real de Gemini con contexto
@@ -1636,7 +3083,7 @@ class GeminiWPCLI {
                 body: JSON.stringify({
                     prompt: userMessage,
                     siteContext: siteContext,
-                    chatHistory: this.chatHistory // 🧠 Enviar historial de chat
+                    chatHistory: this.sessionMemory.chatHistory // 🧠 Send enhanced session memory
                 }),
                 timeout: this.config.API.TIMEOUT
             });
@@ -1667,6 +3114,14 @@ class GeminiWPCLI {
         } catch (error) {
             console.error('❌ Error conectando con Gemini AI:', error);
             
+            // 🧠 Add error to session memory
+            this.addActionToMemory({
+                type: 'gemini_error',
+                description: `Gemini AI error: ${error.message}`,
+                success: false,
+                error: error.message
+            });
+            
             // Mostrar error específico al usuario
             this.addErrorMessage(`Error de IA: ${error.message}. Usando respuesta de emergencia.`);
             
@@ -1677,46 +3132,46 @@ class GeminiWPCLI {
     }
 
     getEmergencyResponse(userMessage) {
-        // Sistema de emergencia cuando Gemini no está disponible
-        console.log('🚨 Activando Gemini WP-Agent de emergencia para:', userMessage);
+        // Emergency system when Gemini is not available
+        console.log('🚨 Activating Typingpress emergency system for:', userMessage);
         
         const lowerMessage = userMessage.toLowerCase();
         
-        // Diagnóstico inteligente de problemas (sistema de emergencia)
+        // Intelligent problem diagnosis (emergency system)
         if (lowerMessage.includes('lento') || lowerMessage.includes('slow') || lowerMessage.includes('rendimiento')) {
             return {
                 command: 'wp plugin list --status=active',
-                explanation: 'Problema de rendimiento detectado. Revisando plugins activos (la causa más común de sitios lentos) - Sistema de emergencia activo.',
+                explanation: 'Performance issue detected. Checking active plugins (the most common cause of slow sites) - Emergency system active.',
                 is_safe: true
             };
         } else if (lowerMessage.includes('error 500') || lowerMessage.includes('error interno')) {
             return {
                 command: 'wp plugin list --status=active',
-                explanation: 'Error 500 detectado. Verificando plugins activos que suelen causar este error - Sistema de emergencia activo.',
+                explanation: 'Error 500 detected. Checking active plugins that usually cause this error - Emergency system active.',
                 is_safe: true
             };
         } else if (lowerMessage.includes('error 404') || lowerMessage.includes('no encontrada')) {
             return {
                 command: 'wp rewrite flush',
-                explanation: 'Error 404 detectado. Regenerando permalinks para resolver páginas no encontradas - Sistema de emergencia activo.',
+                explanation: 'Error 404 detected. Regenerating permalinks to resolve pages not found - Emergency system active.',
                 is_safe: true
             };
         } else if (lowerMessage.includes('no puedo entrar') || lowerMessage.includes('login') || lowerMessage.includes('acceso')) {
             return {
                 command: 'wp user list --role=administrator',
-                explanation: 'Problema de acceso detectado. Verificando usuarios administradores - Sistema de emergencia activo.',
+                explanation: 'Access problem detected. Checking administrator users - Emergency system active.',
                 is_safe: true
             };
         } else if (lowerMessage.includes('hackea') || lowerMessage.includes('malware') || lowerMessage.includes('infectado')) {
             return {
                 command: 'wp user list --role=administrator',
-                explanation: 'Posible compromiso de seguridad. Revisando usuarios admin para detectar cuentas no autorizadas - Sistema de emergencia activo.',
+                explanation: 'Possible security compromise. Checking admin users to detect unauthorized accounts - Emergency system active.',
                 is_safe: true
             };
         } else if (lowerMessage.includes('borrar') || lowerMessage.includes('eliminar') || lowerMessage.includes('delete')) {
             return {
                 command: 'wp --help',
-                explanation: 'ADVERTENCIA: Operación peligrosa detectada. Mostrando ayuda por seguridad. Haz backup antes de eliminar - Sistema de emergencia activo.',
+                explanation: 'WARNING: Dangerous operation detected. Showing help for safety. Make backup before deleting - Emergency system active.',
                 is_safe: false
             };
         }
@@ -1729,7 +3184,7 @@ class GeminiWPCLI {
                 
                 return {
                     command: `wp post create --post_type=page --post_title="Inicio" --post_content='${blockContent}' --post_status=publish`,
-                    explanation: 'Creando página de inicio con saludo y dos columnas de servicios usando bloques de WordPress (Gutenberg) - Sistema de emergencia activo.',
+                    explanation: 'Creating homepage with greeting and two service columns using WordPress blocks (Gutenberg) - Emergency system active.',
                     is_safe: true
                 };
             } else if (lowerMessage.includes('página')) {
@@ -1737,7 +3192,7 @@ class GeminiWPCLI {
                 
                 return {
                     command: `wp post create --post_type=page --post_title="Nueva Página" --post_content='${basicPageContent}' --post_status=draft`,
-                    explanation: 'Creando nueva página con bloques de WordPress (sistema de emergencia)',
+                    explanation: 'Creating new page with WordPress blocks (emergency system)',
                     is_safe: true
                 };
             } else {
@@ -1745,62 +3200,62 @@ class GeminiWPCLI {
                 
                 return {
                     command: `wp post create --post_title="Nuevo Post" --post_content='${basicPostContent}' --post_status=draft`,
-                    explanation: 'Creando nuevo post con bloques de WordPress (sistema de emergencia)',
+                    explanation: 'Creating new post with WordPress blocks (emergency system)',
                     is_safe: true
                 };
             }
         }
         
-        // Patrones básicos de emergencia (más simples que los de config)
+        // Basic emergency patterns (simpler than config ones)
         else if (lowerMessage.includes('plugin')) {
             return {
                 command: 'wp plugin list',
-                explanation: 'Lista plugins instalados (sistema de emergencia - Gemini WP-Agent no disponible)',
+                explanation: 'List installed plugins (emergency system - Typingpress not available)',
                 is_safe: true
             };
         } else if (lowerMessage.includes('usuario') || lowerMessage.includes('user')) {
             return {
                 command: 'wp user list',
-                explanation: 'Lista usuarios registrados (sistema de emergencia)',
+                explanation: 'List registered users (emergency system)',
                 is_safe: true
             };
         } else if (lowerMessage.includes('tema') || lowerMessage.includes('theme')) {
             return {
                 command: 'wp theme list',
-                explanation: 'Lista temas instalados (sistema de emergencia)',
+                explanation: 'List installed themes (emergency system)',
                 is_safe: true
             };
         } else if (lowerMessage.includes('versión') || lowerMessage.includes('version') || lowerMessage.includes('wordpress')) {
             return {
                 command: 'wp --version',
-                explanation: 'Información del sistema WordPress (sistema de emergencia)',
+                explanation: 'WordPress system information (emergency system)',
                 is_safe: true
             };
         } else if (lowerMessage.includes('post') || lowerMessage.includes('entrada')) {
             return {
                 command: 'wp post list',
-                explanation: 'Lista publicaciones recientes (sistema de emergencia)',
+                explanation: 'List recent posts (emergency system)',
                 is_safe: true
             };
         } else if (lowerMessage.includes('base') && lowerMessage.includes('datos')) {
             return {
                 command: 'wp db size',
-                explanation: 'Muestra tamaño de la base de datos (sistema de emergencia)',
+                explanation: 'Show database size (emergency system)',
                 is_safe: true
             };
         }
         
-        // Respuesta por defecto de emergencia
+        // Default emergency response
         return {
             command: 'wp --version',
-            explanation: 'Gemini WP-Agent no está disponible. Sistema de emergencia activo. Describe tu problema específico (ej: "sitio lento", "error 500") para mejor diagnóstico.',
+            explanation: 'Typingpress is not available. Emergency system active. Describe your specific problem (e.g., "slow site", "500 error") for better diagnosis.',
             is_safe: true
         };
     }
 
     async callWordPressAPI(command) {
         if (!this.currentSite) {
-            throw new Error('No hay sitio WordPress configurado. Configura un sitio primero.');
+            throw new Error('No WordPress site configured. Configure a site first.');
         }
 
         const controller = new AbortController();
@@ -1824,27 +3279,53 @@ class GeminiWPCLI {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                
+                // Improve error messages for the user
+                let userFriendlyMessage = errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+                
+                if (errorData.error_type === 'CONNECTION_ERROR') {
+                    if (errorData.error_code === 'ETIMEDOUT') {
+                        userFriendlyMessage = `⏱️ Timeout connecting to WordPress\n\n` +
+                            `The server couldn't connect to your site within the expected time.\n\n` +
+                            `**Possible solutions:**\n` +
+                            `${errorData.suggestions ? errorData.suggestions.map(s => `• ${s}`).join('\n') : 
+                            '• Verify the site is accessible\n• Check that the plugin is installed\n• Try again in a few minutes'}`;
+                    } else if (errorData.error_code === 'ENOTFOUND') {
+                        userFriendlyMessage = `🌐 Could not find the site\n\n` +
+                            `Verify the URL is correct: ${this.currentSite.url}`;
+                    } else if (errorData.error_code === 'ECONNREFUSED') {
+                        userFriendlyMessage = `🚫 Connection refused\n\n` +
+                            `The WordPress server refused the connection. Verify the site is working.`;
+                    }
+                }
+                
+                throw new Error(userFriendlyMessage);
             }
 
-            // Actualizar último uso del sitio
+            // Update last site usage
             this.currentSite.lastUsed = new Date().toISOString();
             this.saveSitesToStorage();
 
             return await response.json();
         } catch (error) {
             clearTimeout(timeoutId);
+            
+            // Handle AbortController errors (client timeout)
+            if (error.name === 'AbortError') {
+                throw new Error(`⏱️ Application timeout\n\nThe request took longer than ${this.config.API.TIMEOUT/1000} seconds.\n\n**Possible causes:**\n• The WordPress site is overloaded\n• Connectivity issues\n• The command requires more time than expected\n\n**Solution:** Try again in a few minutes.`);
+            }
+            
             throw error;
         }
     }
 
-    // 🎨 NUEVAS FUNCIONES PARA LA SIDEBAR
+    // 🎨 NEW FUNCTIONS FOR THE SIDEBAR
 
     showGlobalApiKeyModal() {
-        // Por ahora, usar el modal principal pero pre-llenar la API key
+        // For now, use the main modal but pre-fill the API key
         this.showConfigModal();
         
-        // Pre-llenar la API key global si existe
+        // Pre-fill the global API key if it exists
         setTimeout(() => {
             const globalApiKeyInput = document.getElementById('globalGeminiApiKey');
             if (globalApiKeyInput && this.globalGeminiApiKey) {
@@ -1856,119 +3337,140 @@ class GeminiWPCLI {
 
     async runAutodiagnosis() {
         if (!this.currentSite) {
-            this.addMessage('assistant', '⚠️ Necesitas conectar un sitio WordPress primero. Usa el botón ⚙️ para configurar tu sitio.');
+            this.addMessage('assistant', '⚠️ You need to connect a WordPress site first. Use the ⚙️ button to configure your site.');
             return;
         }
 
-        this.addMessage('user', '🔍 Ejecutar autodiagnóstico completo');
+        this.addMessage('user', '🔍 Run complete autodiagnosis');
         
         try {
-            // Ejecutar diagnóstico del servidor
+            // Show start message
+            this.addMessage('assistant', '🔍 **Starting Complete Diagnosis**\n\nAnalyzing connectivity and server capabilities...');
+            
+            // Step 1: Check basic connectivity
+            console.log('🔍 Step 1: Checking connectivity...');
+            const connectivityTest = await this.testConnection(this.currentSite.url, this.currentSite.token);
+            
+            if (!connectivityTest.success) {
+                this.addMessage('assistant', `❌ **Connectivity Error Detected**\n\n${connectivityTest.error}\n\n**Recommendations:**\n• Verify the site is accessible: ${this.currentSite.url}\n• Check that the Gemini WP-CLI plugin is installed and active\n• Review the security token configuration\n• Contact your hosting if the problem persists`);
+                return;
+            }
+            
+            // Step 2: Get server information
+            console.log('🔍 Step 2: Getting server information...');
             const serverInfo = await this.getServerInfo();
             
-            let diagnosticMessage = `🔍 **Autodiagnóstico Completo**\n\n`;
-            diagnosticMessage += `**Sitio:** ${this.currentSite.name}\n`;
-            diagnosticMessage += `**URL:** ${this.currentSite.url}\n\n`;
-            diagnosticMessage += `**Información del Servidor:**\n`;
-            diagnosticMessage += `• WordPress: ${serverInfo.server_info?.wordpress_version || 'Desconocido'}\n`;
-            diagnosticMessage += `• PHP: ${serverInfo.server_info?.php_version || 'Desconocido'}\n`;
-            diagnosticMessage += `• Servidor: ${serverInfo.server_info?.server_software || 'Desconocido'}\n`;
-            diagnosticMessage += `• WP-CLI: ${serverInfo.wp_cli?.available ? 'Disponible' : 'No disponible'}\n`;
-            diagnosticMessage += `• Método recomendado: ${serverInfo.recommended_method || 'API nativa'}\n\n`;
+            let diagnosticMessage = `✅ **Diagnosis Completed Successfully**\n\n`;
+            diagnosticMessage += `**Site Information:**\n`;
+            diagnosticMessage += `• Name: ${this.currentSite.name}\n`;
+            diagnosticMessage += `• URL: ${this.currentSite.url}\n`;
+            diagnosticMessage += `• Status: 🟢 Connected and working\n\n`;
+            
+            diagnosticMessage += `**Server Information:**\n`;
+            diagnosticMessage += `• WordPress: ${serverInfo.server_info?.wordpress_version || 'Unknown'}\n`;
+            diagnosticMessage += `• PHP: ${serverInfo.server_info?.php_version || 'Unknown'}\n`;
+            diagnosticMessage += `• Server: ${serverInfo.server_info?.server_software || 'Unknown'}\n`;
+            diagnosticMessage += `• WP-CLI: ${serverInfo.wp_cli?.available ? '✅ Available' : '❌ Not available'}\n`;
+            diagnosticMessage += `• Recommended method: ${serverInfo.recommended_method || 'Native API'}\n\n`;
             
             if (serverInfo.execution_capabilities) {
                 const capabilities = serverInfo.execution_capabilities;
-                diagnosticMessage += `**Capacidades de Ejecución:**\n`;
+                diagnosticMessage += `**Execution Capabilities:**\n`;
                 diagnosticMessage += `• shell_exec: ${capabilities.shell_exec ? '✅' : '❌'}\n`;
                 diagnosticMessage += `• exec: ${capabilities.exec ? '✅' : '❌'}\n`;
                 diagnosticMessage += `• system: ${capabilities.system ? '✅' : '❌'}\n`;
                 diagnosticMessage += `• passthru: ${capabilities.passthru ? '✅' : '❌'}\n\n`;
             }
             
-            diagnosticMessage += `✅ Diagnóstico completado. Tu sitio está configurado correctamente.`;
+            // Add recommendations based on capabilities
+            if (serverInfo.wp_cli?.available) {
+                diagnosticMessage += `🚀 **Excellent**: Your server has WP-CLI installed. You'll have full access to all commands with maximum performance.`;
+            } else {
+                diagnosticMessage += `⚠️ **Note**: Your server doesn't have WP-CLI installed, but don't worry. We'll use WordPress native API which works perfectly for most commands.`;
+            }
             
             this.addMessage('assistant', diagnosticMessage);
             
         } catch (error) {
-            console.error('❌ Error en autodiagnóstico:', error);
-            this.addMessage('assistant', '❌ Error ejecutando autodiagnóstico. Verifica que tu sitio esté conectado correctamente.');
+            console.error('❌ Error in autodiagnosis:', error);
+            this.addMessage('assistant', `❌ **Diagnosis Error**\n\n${error.message}\n\n**Possible causes:**\n• Connectivity issues with the site\n• Plugin not installed or inactive\n• Incorrect security token\n• Hosting restrictions\n\n**Solution:** Check the site configuration and try again.`);
         }
     }
 
     async runCleanup() {
         if (!this.currentSite) {
-            this.addMessage('assistant', '⚠️ Necesitas conectar un sitio WordPress primero. Usa el botón ⚙️ para configurar tu sitio.');
+            this.addMessage('assistant', '⚠️ You need to connect a WordPress site first. Use the ⚙️ button to configure your site.');
             return;
         }
 
-        this.addMessage('user', '🧹 Ejecutar limpieza y optimización');
+        this.addMessage('user', '🧹 Run cleanup and optimization');
         
         try {
-            // Ejecutar comandos de limpieza
+            // Execute cleanup commands
             const cleanupCommands = [
                 'wp cache flush',
                 'wp db clean',
                 'wp db optimize'
             ];
             
-            let cleanupMessage = `🧹 **Limpieza y Optimización Iniciada**\n\n`;
+            let cleanupMessage = `🧹 **Cleanup and Optimization Started**\n\n`;
             
             for (const command of cleanupCommands) {
                 try {
                     const result = await this.executeCommand(command);
-                    cleanupMessage += `✅ ${command}: Completado\n`;
+                    cleanupMessage += `✅ ${command}: Completed\n`;
                 } catch (error) {
                     cleanupMessage += `⚠️ ${command}: ${error.message}\n`;
                 }
             }
             
-            cleanupMessage += `\n🎉 Proceso de limpieza completado. Tu sitio ha sido optimizado.`;
+            cleanupMessage += `\n🎉 Cleanup process completed. Your site has been optimized.`;
             
             this.addMessage('assistant', cleanupMessage);
             
         } catch (error) {
-            console.error('❌ Error en limpieza:', error);
-            this.addMessage('assistant', '❌ Error ejecutando limpieza. Algunos comandos pueden no estar disponibles en tu hosting.');
+            console.error('❌ Error in cleanup:', error);
+            this.addMessage('assistant', '❌ Error executing cleanup. Some commands may not be available on your hosting.');
         }
     }
 
     clearChatHistory() {
-        // Limpiar el área de chat
+        // Clear chat area
         this.chatArea.innerHTML = '';
         
-        // Limpiar historial en memoria
+        // Clear history in memory
         this.chatHistory = [];
         
-        // Añadir mensaje de bienvenida
-        this.addMessage('assistant', `¡Hola! Soy Gemini WP-Agent, tu asistente conversacional especializado en WordPress. 
+        // Add welcome message
+        this.addMessage('assistant', `Hello! I'm Typingpress, your personal Gemini agent for WordPress. 
 
-Puedo ayudarte con:
-🔧 Gestionar tu sitio WordPress (plugins, temas, usuarios, contenido)
-🎨 Generar código CSS, JavaScript, PHP personalizado
-💬 Responder preguntas sobre desarrollo web
-📝 Crear contenido con bloques de Gutenberg
-🗄️ Optimizar y mantener tu base de datos
+I can help you with:
+🔧 Managing your WordPress site (plugins, themes, users, content)
+🎨 Generating custom CSS, JavaScript, PHP code
+💬 Answering web development questions
+📝 Creating content with Gutenberg blocks
+🗄️ Optimizing and maintaining your database
 
-¿En qué puedo ayudarte hoy?`);
+How can I help you today?`);
         
-        console.log('🗑️ Historial de chat limpiado');
+        console.log('🗑️ Chat history cleared');
     }
 
-    // Actualizar información del sitio en la sidebar
+    // Update site information in sidebar
     updateSidebarSiteInfo() {
-        console.log('🔄 Actualizando información del sitio en sidebar y header...');
+        console.log('🔄 Updating site information in sidebar and header...');
         
         const connectedSiteInfo = document.getElementById('connectedSiteInfo');
         const currentSiteName = document.getElementById('currentSiteName');
         const currentSiteUrl = document.getElementById('currentSiteUrl');
         const currentSiteStatus = document.getElementById('currentSiteStatus');
         
-        // 🆕 Elementos del header
+        // 🆕 Header elements
         const activeSiteIndicator = document.getElementById('activeSiteIndicator');
         const activeSiteName = document.getElementById('activeSiteName');
         
-        console.log('📊 Sitio actual:', this.currentSite?.name || 'Ninguno');
-        console.log('📊 Elementos encontrados:', {
+        console.log('📊 Current site:', this.currentSite?.name || 'None');
+        console.log('📊 Elements found:', {
             connectedSiteInfo: !!connectedSiteInfo,
             activeSiteIndicator: !!activeSiteIndicator,
             activeSiteName: !!activeSiteName
@@ -1988,79 +3490,182 @@ Puedo ayudarte con:
             
             if (currentSiteStatus) {
                 if (this.currentSite.status === 'connected') {
-                    currentSiteStatus.textContent = 'Conectado';
+                    currentSiteStatus.textContent = 'Connected';
                     currentSiteStatus.className = 'site-status connected';
                 } else {
-                    currentSiteStatus.textContent = 'Desconectado';
+                    currentSiteStatus.textContent = 'Disconnected';
                     currentSiteStatus.className = 'site-status disconnected';
                 }
             }
             
-            // 🆕 Actualizar indicador del header
+            // 🆕 Update header indicator
             if (activeSiteIndicator) {
                 activeSiteIndicator.style.display = 'flex';
-                console.log('✅ Mostrando indicador de sitio activo');
+                console.log('✅ Showing active site indicator');
             }
             if (activeSiteName) {
                 activeSiteName.textContent = this.currentSite.name;
-                console.log('✅ Nombre del sitio actualizado en header:', this.currentSite.name);
+                console.log('✅ Site name updated in header:', this.currentSite.name);
             }
             
         } else {
-            // Sin sitio conectado
+            // No connected site
             if (connectedSiteInfo) {
                 connectedSiteInfo.style.display = 'none';
             }
             if (activeSiteIndicator) {
                 activeSiteIndicator.style.display = 'none';
-                console.log('❌ Ocultando indicador de sitio activo');
+                console.log('❌ Hiding active site indicator');
             }
         }
         
-        // Actualizar estado de API
+        // Update API status
         const apiStatusValue = document.getElementById('apiStatusValue');
         if (apiStatusValue) {
             if (this.hasGlobalGeminiApiKey()) {
-                apiStatusValue.textContent = 'API Key personal (ilimitada)';
+                apiStatusValue.textContent = 'Personal API Key (unlimited)';
                 apiStatusValue.className = 'api-status-value';
             } else {
-                apiStatusValue.textContent = 'Consultas gratuitas (50/hora)';
+                apiStatusValue.textContent = 'Free queries (50/hour)';
                 apiStatusValue.className = 'api-status-value free';
             }
         }
         
-        // 🆕 Actualizar desplegable de sitios
+        // 🆕 Update site dropdown
         this.updateSiteDropdown();
         
-        console.log('✅ Información del sitio actualizada correctamente');
+        console.log('✅ Site information updated correctly');
     }
 
-    // 🆕 Función para actualizar el desplegable de sitios - VERSIÓN SIMPLIFICADA
+    // 🆕 Show stateless mode indicator in sidebar
+    showStatelessModeIndicator() {
+        const connectedSiteInfo = document.getElementById('connectedSiteInfo');
+        if (connectedSiteInfo) {
+            connectedSiteInfo.style.display = 'block';
+            
+            const siteName = document.getElementById('currentSiteName');
+            const siteUrl = document.getElementById('currentSiteUrl');
+            const siteStatus = document.getElementById('currentSiteStatus');
+            
+            if (siteName) siteName.textContent = 'No site connected';
+            if (siteUrl) siteUrl.textContent = 'Temporary chat mode';
+            if (siteStatus) {
+                siteStatus.textContent = 'Stateless';
+                siteStatus.className = 'site-status disconnected';
+            }
+        }
+        
+        // Update header indicator
+        this.updateHeaderForStatelessMode();
+        
+        // Show welcome message for stateless mode
+        this.showStatelessWelcomeMessage();
+    }
+
+    // 🆕 Update header to show stateless mode
+    updateHeaderForStatelessMode() {
+        const activeSiteIndicator = document.querySelector('.active-site-indicator');
+        if (activeSiteIndicator) {
+            const siteIndicatorName = activeSiteIndicator.querySelector('.site-indicator-name');
+            const siteIndicatorLabel = activeSiteIndicator.querySelector('.site-indicator-label');
+            
+            if (siteIndicatorName) {
+                siteIndicatorName.textContent = 'No site connected';
+                siteIndicatorName.style.color = '#ffbd2e';
+            }
+            if (siteIndicatorLabel) {
+                siteIndicatorLabel.textContent = 'Temporary chat';
+            }
+        }
+    }
+
+    // 🆕 Show welcome message for stateless mode
+    showStatelessWelcomeMessage() {
+        this.addMessage('assistant', 
+            `<div style="background: rgba(255, 189, 46, 0.1); border: 1px solid #ffbd2e; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                <strong>💬 Welcome to Temporary Chat Mode</strong><br><br>
+                You're chatting with Gemini AI without a WordPress site connected. This mode offers:
+                <ul style="margin: 12px 0 0 20px; color: #e0e0e0;">
+                    <li>General AI assistance and conversation</li>
+                    <li>Code generation (HTML, CSS, JavaScript, PHP)</li>
+                    <li>Explanations and tutorials</li>
+                    <li>No conversation history stored</li>
+                </ul>
+            </div>
+            
+            <strong>🚀 Ready to unlock full WordPress capabilities?</strong><br><br>
+            Connect your WordPress site using the ⚙️ button to access:
+            <ul style="margin: 8px 0 0 20px; color: #10a37f;">
+                <li>Site analysis and diagnostics</li>
+                <li>Policy-driven recommendations</li>
+                <li>Guided workflows and automation</li>
+                <li>Real WordPress abilities and commands</li>
+                <li>Conversation memory and context</li>
+            </ul>
+            
+            <br><em style="color: #8e8ea0;">Ask me anything to get started! 🤖</em>`
+        );
+    }
+
+    // 🧠 Initialize memory management UI
+    initializeMemoryUI() {
+        // Add memory status to sidebar
+        this.updateMemoryStatusUI();
+        
+        // Update memory status every 30 seconds
+        setInterval(() => {
+            this.updateMemoryStatusUI();
+        }, 30000);
+    }
+
+    // 🧠 Update memory status in UI
+    updateMemoryStatusUI() {
+        const memoryStatusElement = document.getElementById('memoryStatus');
+        if (memoryStatusElement) {
+            const sessionDuration = Math.round(this.getSessionDuration() / 60000);
+            const messageCount = this.sessionMemory.chatHistory.length;
+            const actionCount = this.sessionMemory.executedActions.length;
+            
+            memoryStatusElement.innerHTML = `
+                <div class="memory-status-title">Session Memory</div>
+                <div class="memory-status-details">
+                    <div>Duration: ${sessionDuration}m</div>
+                    <div>Messages: ${messageCount}/10</div>
+                    <div>Actions: ${actionCount}/20</div>
+                </div>
+                <button class="memory-clear-btn" onclick="window.geminiApp.clearSessionMemory()">
+                    Clear Memory
+                </button>
+            `;
+        }
+    }
+
+    // 🆕 Function to update site dropdown - SIMPLIFIED VERSION
     updateSiteDropdown() {
-        console.log('📋 Actualizando desplegable de sitios...');
+        console.log('📋 Updating site dropdown...');
         const siteDropdownList = document.getElementById('siteDropdownList');
         
         if (!siteDropdownList) {
-            console.error('❌ Elemento siteDropdownList no encontrado');
+            console.error('❌ siteDropdownList element not found');
             return;
         }
         
-        // Limpiar contenido
+        // Clear content
         siteDropdownList.innerHTML = '';
         
         if (this.savedSites.length === 0) {
             siteDropdownList.innerHTML = `
                 <div style="padding: 12px 16px; text-align: center; color: #888;">
-                    No hay sitios configurados
+                    No sites configured
                 </div>
             `;
             return;
         }
         
-        // Crear elementos de sitios con estilos inline
+        // Create site elements with inline styles
         this.savedSites.forEach((site) => {
             const isActive = this.currentSite?.id === site.id;
-            const statusText = site.status === 'connected' ? 'Conectado' : 'Desconectado';
+            const statusText = site.status === 'connected' ? 'Connected' : 'Disconnected';
             const statusColor = site.status === 'connected' ? '#27ca3f' : '#ff5f56';
             
             const siteItem = document.createElement('div');
@@ -2078,8 +3683,8 @@ Puedo ayudarte con:
                 <div style="font-size: 11px; color: #888; margin-bottom: 4px;">${site.url}</div>
                 <div style="font-size: 10px; padding: 2px 6px; border-radius: 4px; display: inline-block; background-color: rgba(${statusColor === '#27ca3f' ? '39, 202, 63' : '255, 95, 86'}, 0.2); color: ${statusColor};">${statusText}</div>
                 <div style="display: flex; gap: 8px; margin-top: 8px;">
-                    ${!isActive ? `<button onclick="window.geminiApp.selectSiteFromDropdown('${site.id}')" style="background: none; border: 1px solid #404040; color: #888; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer;">Usar</button>` : '<span style="color: #27ca3f; font-size: 10px;">● Activo</span>'}
-                    <button onclick="window.geminiApp.deleteSiteFromDropdown('${site.id}')" style="background: none; border: 1px solid #404040; color: #888; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer;">Desconectar</button>
+                    ${!isActive ? `<button onclick="window.geminiApp.selectSiteFromDropdown('${site.id}')" style="background: none; border: 1px solid #404040; color: #888; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer;">Use</button>` : '<span style="color: #27ca3f; font-size: 10px;">● Active</span>'}
+                    <button onclick="window.geminiApp.deleteSiteFromDropdown('${site.id}')" style="background: none; border: 1px solid #404040; color: #888; padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer;">Disconnect</button>
                 </div>
             `;
             
@@ -2094,48 +3699,48 @@ Puedo ayudarte con:
             siteDropdownList.appendChild(siteItem);
         });
         
-        console.log('✅ Desplegable actualizado correctamente');
+        console.log('✅ Dropdown updated correctly');
     }
 
-    // 🆕 Función para seleccionar sitio desde el desplegable
+    // 🆕 Function to select site from dropdown
     selectSiteFromDropdown(siteId) {
         this.selectSite(siteId);
         this.hideSiteDropdown();
     }
 
-    // 🆕 Función para eliminar sitio desde el desplegable
+    // 🆕 Function to delete site from dropdown
     deleteSiteFromDropdown(siteId) {
         const site = this.savedSites.find(s => s.id === siteId);
         if (!site) return;
         
-        if (confirm(`¿Estás seguro de que quieres desconectar "${site.name}"?\n\nEsto eliminará la configuración guardada de este sitio.`)) {
+        if (confirm(`Are you sure you want to disconnect "${site.name}"?\n\nThis will remove the saved configuration for this site.`)) {
             this.deleteSite(siteId);
             this.updateSiteDropdown();
             
-            // Mostrar mensaje de confirmación
+            // Show confirmation message
             this.addMessage('assistant', 
-                `<strong>🔌 Sitio desconectado</strong><br><br>
-                Se ha eliminado la configuración de: <code>${site.name}</code><br>
+                `<strong>🔌 Site disconnected</strong><br><br>
+                Removed configuration for: <code>${site.name}</code><br>
                 URL: <span style="color: #888;">${site.url}</span><br><br>
-                <em>Puedes volver a conectarlo cuando quieras usando el botón ⚙️</em>`
+                <em>You can reconnect it anytime using the ⚙️ button</em>`
             );
         }
     }
 
-    // 🆕 IMPLEMENTACIÓN SIMPLIFICADA DEL DROPDOWN
+    // 🆕 SIMPLIFIED DROPDOWN IMPLEMENTATION
     
-    // 🆕 Función para mostrar/ocultar el desplegable
+    // 🆕 Function to show/hide dropdown
     toggleSiteDropdown() {
-        console.log('🔄 toggleSiteDropdown llamado');
+        console.log('🔄 toggleSiteDropdown called');
         const dropdown = document.getElementById('siteDropdown');
         
         if (!dropdown) {
-            console.error('❌ Elemento siteDropdown no encontrado en el DOM');
+            console.error('❌ siteDropdown element not found in DOM');
             return;
         }
         
         const isVisible = dropdown.style.display === 'block';
-        console.log('📂 Estado actual del dropdown:', isVisible ? 'visible' : 'oculto');
+        console.log('📂 Current dropdown state:', isVisible ? 'visible' : 'hidden');
         
         if (isVisible) {
             this.hideSiteDropdown();
@@ -2144,20 +3749,20 @@ Puedo ayudarte con:
         }
     }
 
-    // 🆕 Función para mostrar el desplegable - VERSIÓN SIMPLIFICADA
+    // 🆕 Function to show dropdown - SIMPLIFIED VERSION
     showSiteDropdown() {
-        console.log('📂 Mostrando desplegable de sitios');
+        console.log('📂 Showing site dropdown');
         const dropdown = document.getElementById('siteDropdown');
         
         if (!dropdown) {
-            console.error('❌ Elemento siteDropdown no encontrado');
+            console.error('❌ siteDropdown element not found');
             return;
         }
         
-        // Actualizar contenido primero
+        // Update content first
         this.updateSiteDropdown();
         
-        // Mostrar con estilos inline para forzar visibilidad
+        // Show with inline styles to force visibility
         dropdown.style.cssText = `
             display: block !important;
             position: absolute !important;
@@ -2174,20 +3779,20 @@ Puedo ayudarte con:
             margin-top: 4px !important;
         `;
         
-        // Añadir clase para animación
+        // Add class for animation
         dropdown.classList.add('show');
         
-        // Event listener para cerrar al hacer clic fuera
+        // Event listener to close when clicking outside
         setTimeout(() => {
             document.addEventListener('click', this.handleOutsideClick.bind(this), { once: true });
         }, 100);
         
-        console.log('✅ Dropdown mostrado con estilos inline');
+        console.log('✅ Dropdown shown with inline styles');
     }
 
-    // 🆕 Función para ocultar el desplegable - VERSIÓN SIMPLIFICADA
+    // 🆕 Function to hide dropdown - SIMPLIFIED VERSION
     hideSiteDropdown() {
-        console.log('📂 Ocultando desplegable de sitios');
+        console.log('📂 Hiding site dropdown');
         const dropdown = document.getElementById('siteDropdown');
         
         if (!dropdown) return;
@@ -2195,84 +3800,84 @@ Puedo ayudarte con:
         dropdown.style.display = 'none';
         dropdown.classList.remove('show');
         
-        console.log('✅ Dropdown ocultado');
+        console.log('✅ Dropdown hidden');
     }
 
-    // 🆕 Función para manejar clics fuera - VERSIÓN SIMPLIFICADA
+    // 🆕 Function to handle outside clicks - SIMPLIFIED VERSION
     handleOutsideClick(event) {
         const dropdown = document.getElementById('siteDropdown');
         const indicator = document.getElementById('activeSiteIndicator');
         
         if (!dropdown || !indicator) return;
         
-        // Si el clic fue fuera del dropdown y del indicador, cerrar
+        // If click was outside dropdown and indicator, close
         if (!dropdown.contains(event.target) && !indicator.contains(event.target)) {
-            console.log('👆 Clic fuera detectado, cerrando dropdown');
+            console.log('👆 Outside click detected, closing dropdown');
             this.hideSiteDropdown();
         }
     }
 
-    // Función para normalizar texto de Gemini antes del renderizado Markdown
+    // Function to normalize Gemini text before Markdown rendering
     normalizeGeminiMarkdown(text) {
         if (!text) return text;
         
-        console.log('🔧 Normalizando texto de Gemini...');
+        console.log('🔧 Normalizing Gemini text...');
         
-        // Debug: mostrar algunos caracteres problemáticos
+        // Debug: show some problematic characters
         const problematicChars = text.match(/[\u2018\u2019\u00B4\u201C\u201D\u2028\u2029\u200B-\u200D\uFEFF]/g);
         if (problematicChars) {
-            console.log('⚠️ Caracteres problemáticos encontrados:', problematicChars.map(c => `${c} (U+${c.charCodeAt(0).toString(16).toUpperCase()})`));
+            console.log('⚠️ Problematic characters found:', problematicChars.map(c => `${c} (U+${c.charCodeAt(0).toString(16).toUpperCase()})`));
         }
         
         return text
-            // Normalizar backticks falsos a backticks ASCII
-            .replace(/[\u2018\u2019\u00B4]/g, '`')  // Comillas curvas y acento agudo → backtick
-            .replace(/[\u201C\u201D]/g, '"')        // Comillas dobles curvas → comillas ASCII
+            // Normalize fake backticks to ASCII backticks
+            .replace(/[\u2018\u2019\u00B4]/g, '`')  // Curved quotes and acute accent → backtick
+            .replace(/[\u201C\u201D]/g, '"')        // Curved double quotes → ASCII quotes
             
-            // Normalizar saltos de línea
+            // Normalize line breaks
             .replace(/\r\n/g, '\n')                // Windows line endings → Unix
             .replace(/\u2028|\u2029/g, '\n')       // Unicode line/paragraph separators → \n
             
-            // Eliminar caracteres invisibles
+            // Remove invisible characters
             .replace(/[\u200B-\u200D\uFEFF]/g, '') // Zero-width spaces, BOM, etc.
             
-            // Normalizar espacios no estándar
+            // Normalize non-standard spaces
             .replace(/\u00A0/g, ' ')               // Non-breaking space → space
             .replace(/\u2000-\u200A/g, ' ')        // Various Unicode spaces → space
             
-            // Limpiar múltiples espacios y líneas vacías excesivas
+            // Clean multiple spaces and excessive empty lines
             .replace(/[ \t]+/g, ' ')               // Multiple spaces/tabs → single space
             .replace(/\n{3,}/g, '\n\n');           // Multiple newlines → max 2
     }
 
-    // Función para renderizar Markdown básico
+    // Function to render basic Markdown
     renderMarkdown(content) {
-        console.log('🔧 renderMarkdown iniciado, contenido:', content?.substring(0, 100) + '...');
+        console.log('🔧 renderMarkdown started, content:', content?.substring(0, 100) + '...');
         
         if (!content) {
-            console.log('❌ Contenido vacío, retornando string vacío');
+            console.log('❌ Empty content, returning empty string');
             return '';
         }
         
-        // NORMALIZAR CONTENIDO ANTES DE PROCESAR
+        // NORMALIZE CONTENT BEFORE PROCESSING
         const normalizedContent = this.normalizeGeminiMarkdown(content);
-        console.log('✅ Contenido normalizado');
+        console.log('✅ Content normalized');
         
-        // Debug: comparar contenido original vs normalizado
+        // Debug: compare original vs normalized content
         if (content !== normalizedContent) {
-            console.log('🔄 Contenido cambió después de normalización');
-            console.log('📄 Original (primeros 200 chars):', content.substring(0, 200));
-            console.log('📄 Normalizado (primeros 200 chars):', normalizedContent.substring(0, 200));
+            console.log('🔄 Content changed after normalization');
+            console.log('📄 Original (first 200 chars):', content.substring(0, 200));
+            console.log('📄 Normalized (first 200 chars):', normalizedContent.substring(0, 200));
         }
         
         let formatted = normalizedContent;
-        console.log('📝 Contenido a procesar:', formatted.length, 'caracteres');
+        console.log('📝 Content to process:', formatted.length, 'characters');
         
-        // 🔍 DEBUG AVANZADO: Analizar el contenido completo
-        console.log('🔍 ANÁLISIS COMPLETO DEL CONTENIDO:');
-        console.log('📄 Contenido completo:', formatted);
+        // 🔍 ADVANCED DEBUG: Analyze complete content
+        console.log('🔍 COMPLETE CONTENT ANALYSIS:');
+        console.log('📄 Complete content:', formatted);
         
-        // Buscar diferentes patrones de código
+        // Search for different code patterns
         const patterns = {
             'triple_backticks': /```[\s\S]*?```/g,
             'triple_backticks_with_lang': /```\w+[\s\S]*?```/g,
@@ -2282,7 +3887,7 @@ Puedo ayudarte con:
         
         Object.entries(patterns).forEach(([name, pattern]) => {
             const matches = formatted.match(pattern);
-            console.log(`🔍 Patrón ${name}:`, matches?.length || 0, matches ? matches.slice(0, 3) : 'ninguno');
+            console.log(`🔍 Pattern ${name}:`, matches?.length || 0, matches ? matches.slice(0, 3) : 'none');
         });
         
         // Procesar bloques de código con contenido normalizado
@@ -2318,7 +3923,7 @@ Puedo ayudarte con:
                                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                                     </svg>
-                                    Copiar código
+                                    Copy code
                                 </button>
                             </div>
                             <pre class="code-content" id="${codeId}"><code class="language-${lang}">${this.escapeHtml(cleanCode)}</code></pre>
@@ -2372,7 +3977,7 @@ Puedo ayudarte con:
                                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                             </svg>
-                            Copiar código
+                            Copy code
                         </button>
                     </div>
                     <pre class="code-content" id="${codeId}"><code class="language-${lang}">${this.escapeHtml(cleanCode)}</code></pre>
@@ -2477,33 +4082,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Función global para copiar código al portapapeles
+// Global function to copy code to clipboard
 function copyCodeToClipboard(codeId, button) {
     const codeElement = document.getElementById(codeId);
     if (!codeElement) return;
     
-    // Obtener el texto del código (sin el HTML de highlight.js)
+    // Get code text (without highlight.js HTML)
     const code = codeElement.textContent || codeElement.innerText;
     const originalText = button.innerHTML;
     
     navigator.clipboard.writeText(code).then(() => {
-        // Cambiar el botón temporalmente
+        // Change button temporarily
         button.innerHTML = `
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="20,6 9,17 4,12"></polyline>
             </svg>
-            ¡Copiado!
+            Copied!
         `;
         button.classList.add('copied');
         
-        // Restaurar después de 2 segundos
+        // Restore after 2 seconds
         setTimeout(() => {
             button.innerHTML = originalText;
             button.classList.remove('copied');
         }, 2000);
     }).catch(err => {
-        console.error('Error al copiar:', err);
-        // Fallback para navegadores más antiguos
+        console.error('Error copying:', err);
+        // Fallback for older browsers
         const textArea = document.createElement('textarea');
         textArea.value = code;
         textArea.style.position = 'fixed';
@@ -2519,7 +4124,7 @@ function copyCodeToClipboard(codeId, button) {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="20,6 9,17 4,12"></polyline>
                 </svg>
-                ¡Copiado!
+                Copied!
             `;
             button.classList.add('copied');
             
@@ -2528,24 +4133,24 @@ function copyCodeToClipboard(codeId, button) {
                 button.classList.remove('copied');
             }, 2000);
         } catch (fallbackErr) {
-            console.error('Error en fallback de copia:', fallbackErr);
+            console.error('Error in copy fallback:', fallbackErr);
         } finally {
             document.body.removeChild(textArea);
         }
     });
 }
 
-// 🧪 Función de prueba para simular respuesta de Gemini con código
+// 🧪 Test function to simulate Gemini response with code
 function testGeminiResponseWithCode() {
-    console.log('🧪 INICIANDO PRUEBA DE RESPUESTA GEMINI CON CÓDIGO');
+    console.log('🧪 STARTING GEMINI RESPONSE WITH CODE TEST');
     
-    // Simular diferentes tipos de respuestas que Gemini podría enviar
+    // Simulate different types of responses that Gemini could send
     const testResponses = [
         {
-            name: 'Respuesta con código CSS normal',
-            content: `¡Hola! Claro, puedo ayudarte con eso.
+            name: 'Response with normal CSS code',
+            content: `Hello! Of course, I can help you with that.
 
-Para dejar fijo un header en WordPress, normalmente necesitas añadir CSS personalizado. Aquí tienes el código:
+To make a header fixed in WordPress, you usually need to add custom CSS. Here's the code:
 
 \`\`\`css
 .site-header {
@@ -2559,17 +4164,17 @@ Para dejar fijo un header en WordPress, normalmente necesitas añadir CSS person
 }
 
 body {
-    padding-top: 80px; /* Ajusta según la altura de tu header */
+    padding-top: 80px; /* Adjust according to your header height */
 }
 \`\`\`
 
-Este código hará que tu header se mantenga fijo en la parte superior de la página.`
+This code will make your header stay fixed at the top of the page.`
         },
         {
-            name: 'Respuesta con caracteres Unicode problemáticos',
-            content: `¡Hola! Claro, puedo ayudarte con eso.
+            name: 'Response with problematic Unicode characters',
+            content: `Hello! Of course, I can help you with that.
 
-Para dejar fijo un header en WordPress, normalmente necesitas añadir CSS personalizado. Aquí tienes el código:
+To make a header fixed in WordPress, you usually need to add custom CSS. Here's the code:
 
 \u2018\u2018\u2018css
 .site-header {
@@ -2583,59 +4188,59 @@ Para dejar fijo un header en WordPress, normalmente necesitas añadir CSS person
 }
 
 body {
-    padding-top: 80px; /* Ajusta según la altura de tu header */
+    padding-top: 80px; /* Adjust according to your header height */
 }
 \u2019\u2019\u2019
 
-Este código hará que tu header se mantenga fijo en la parte superior de la página.`
+This code will make your header stay fixed at the top of the page.`
         }
     ];
     
     testResponses.forEach((testResponse, index) => {
-        console.log(`\n🧪 PRUEBA ${index + 1}: ${testResponse.name}`);
-        console.log('📄 Contenido original:', testResponse.content);
+        console.log(`\n🧪 TEST ${index + 1}: ${testResponse.name}`);
+        console.log('📄 Original content:', testResponse.content);
         
         if (window.geminiApp && window.geminiApp.renderMarkdown) {
             const result = window.geminiApp.renderMarkdown(testResponse.content);
-            console.log('✅ Resultado renderizado:', result);
+            console.log('✅ Rendered result:', result);
             
-            // Añadir el mensaje a la interfaz
+            // Add message to interface
             window.geminiApp.addMessage('assistant', testResponse.content);
         } else {
-            console.error('❌ window.geminiApp no disponible');
+            console.error('❌ window.geminiApp not available');
         }
     });
     
-    console.log('\n🧪 PRUEBAS COMPLETADAS');
+    console.log('\n🧪 TESTS COMPLETED');
 }
-// 🧪 Función de prueba específica para formato Gemini sin backticks
+// 🧪 Specific test function for Gemini format without backticks
 function testGeminiAlternativeFormat() {
-    console.log('🧪 INICIANDO PRUEBA DE FORMATO ALTERNATIVO GEMINI');
+    console.log('🧪 STARTING GEMINI ALTERNATIVE FORMAT TEST');
     
-    // Simular la respuesta real que recibiste de Gemini
-    const realGeminiResponse = `¡Claro que sí! Para dejar fijo un header en WordPress, generalmente necesitas aplicar algo de CSS. Aquí tienes un ejemplo básico que puedes añadir a tu archivo \`style.css\` del tema hijo, o en el personalizador de WordPress (Apariencia > Personalizar > CSS Adicional):
+    // Simulate the real response you received from Gemini
+    const realGeminiResponse = `Of course! To make a header fixed in WordPress, you generally need to apply some CSS. Here's a basic example you can add to your child theme's \`style.css\` file, or in the WordPress customizer (Appearance > Customize > Additional CSS):
 
 css
-/* Para un header fijo en la parte superior */
-.site-header { /* O el selector de tu header, como #masthead, #header, etc. */
+/* For a fixed header at the top */
+.site-header { /* Or your header selector, like #masthead, #header, etc. */
     position: fixed;
     top: 0;
-    width: 100%; /* Asegura que ocupe todo el ancho */
-    background-color: #ffffff; /* Un color de fondo para que el contenido no se vea a través */
-    z-index: 1000; /* Asegura que el header esté por encima de otros elementos */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Opcional: una sombra sutil */
+    width: 100%; /* Ensures it takes the full width */
+    background-color: #ffffff; /* A background color so content doesn't show through */
+    z-index: 1000; /* Ensures the header is above other elements */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Optional: a subtle shadow */
 }
 
-/* IMPORTANTE: Añade un padding al body para que el contenido no quede debajo del header fijo */
+/* IMPORTANT: Add padding to body so content doesn't go under the fixed header */
 body {
-    padding-top: 80px; /* Ajusta este valor según la altura de tu header */
+    padding-top: 80px; /* Adjust this value according to your header height */
 }
 
-**Explicación:**
+**Explanation:**
 
-1. **\`.site-header\`**: Este es un selector de ejemplo.`;
+1. **\`.site-header\`**: This is an example selector.`;
     
-    console.log('📄 Contenido de prueba (formato real Gemini):', realGeminiResponse);
+    console.log('📄 Test content (real Gemini format):', realGeminiResponse);
     
     if (window.geminiApp && window.geminiApp.renderMarkdown) {
         const result = window.geminiApp.renderMarkdown(realGeminiResponse);
@@ -2644,8 +4249,1337 @@ body {
         // Añadir el mensaje a la interfaz
         window.geminiApp.addMessage('assistant', realGeminiResponse);
     } else {
-        console.error('❌ window.geminiApp no disponible');
+        console.error('❌ window.geminiApp not available');
     }
     
     console.log('🧪 PRUEBA DE FORMATO ALTERNATIVO COMPLETADA');
 }
+// 🔄 WORKFLOW ENGINE: Funciones para manejo de workflows
+
+// Simular paso de workflow
+async simulateWorkflowStep(sessionId, stepIndex) {
+    console.log(`🧪 Simulando paso ${stepIndex} de workflow ${sessionId}`);
+    
+    try {
+        const response = await fetch(`/api/wp/workflows/sessions/${sessionId}/steps/${stepIndex}/simulate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                wordpressUrl: this.currentSite.url,
+                authToken: this.currentSite.token
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.status !== 'success') {
+            throw new Error(data.message || 'Error simulating step');
+        }
+        
+        console.log('✅ Simulación de paso completada:', data);
+        
+        // Actualizar UI del paso
+        this.updateWorkflowStepUI(sessionId, stepIndex, 'simulated', data.result);
+        
+        // Mostrar resultado de simulación
+        const simulationMessage = `
+            <div class="workflow-step-simulation">
+                <h4>🧪 Simulación del Paso ${stepIndex + 1}</h4>
+                <p><strong>Resultado:</strong> ${data.result.simulation_result?.message || 'Simulación completada'}</p>
+                ${data.result.impact_report ? `
+                <div class="simulation-impact">
+                    <strong>Impact:</strong> ${data.result.impact_report.human_explanation?.what_will_happen || 'See technical details'}
+                </div>
+                ` : ''}
+                <small>💡 Esta fue una simulación - no se realizaron cambios reales.</small>
+            </div>
+        `;
+        
+        this.addMessage('assistant', simulationMessage);
+        
+    } catch (error) {
+        console.error('❌ Error simulating workflow step:', error);
+        this.addMessage('assistant', `❌ Error simulating step: ${error.message}`);
+    }
+}
+
+// Ejecutar paso de workflow
+async executeWorkflowStep(sessionId, stepIndex) {
+    console.log(`⚡ Ejecutando paso ${stepIndex} de workflow ${sessionId}`);
+    
+    // Pedir confirmación antes de ejecutar
+    if (!confirm('¿Estás seguro de que quieres ejecutar este paso? Esta acción realizará cambios reales en tu sitio.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/wp/workflows/sessions/${sessionId}/steps/${stepIndex}/execute`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                wordpressUrl: this.currentSite.url,
+                authToken: this.currentSite.token
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.status !== 'success') {
+            throw new Error(data.message || 'Error executing step');
+        }
+        
+        console.log('✅ Ejecución de paso completada:', data);
+        
+        // Actualizar UI del paso
+        this.updateWorkflowStepUI(sessionId, stepIndex, 'completed', data.result);
+        
+        // Mostrar resultado de ejecución
+        const executionMessage = `
+            <div class="workflow-step-execution">
+                <h4>✅ Step ${stepIndex + 1} Executed</h4>
+                <p><strong>Result:</strong> ${data.result.execution_result?.message || 'Step completed successfully'}</p>
+                ${data.result.workflow_complete ? `
+                <div class="workflow-complete">
+                    <strong>🎉 Workflow completed!</strong>
+                    <p>All required steps have been executed successfully.</p>
+                </div>
+                ` : ''}
+            </div>
+        `;
+        
+        this.addMessage('assistant', executionMessage);
+        
+    } catch (error) {
+        console.error('❌ Error executing workflow step:', error);
+        this.addMessage('assistant', `❌ Error executing step: ${error.message}`);
+    }
+}
+
+// Saltar paso de workflow
+async skipWorkflowStep(sessionId, stepIndex) {
+    const reason = prompt('¿Por qué quieres saltar este paso? (opcional)') || '';
+    
+    console.log(`⏭️ Saltando paso ${stepIndex} de workflow ${sessionId}`);
+    
+    try {
+        const response = await fetch(`/api/wp/workflows/sessions/${sessionId}/steps/${stepIndex}/skip`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                wordpressUrl: this.currentSite.url,
+                authToken: this.currentSite.token,
+                reason: reason
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.status !== 'success') {
+            throw new Error(data.message || 'Error skipping step');
+        }
+        
+        console.log('✅ Paso saltado:', data);
+        
+        // Actualizar UI del paso
+        this.updateWorkflowStepUI(sessionId, stepIndex, 'skipped', data.result);
+        
+        // Mostrar confirmación
+        const skipMessage = `
+            <div class="workflow-step-skip">
+                <h4>⏭️ Step ${stepIndex + 1} Skipped</h4>
+                ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
+                <small>This step was omitted and will not be executed.</small>
+            </div>
+        `;
+        
+        this.addMessage('assistant', skipMessage);
+        
+    } catch (error) {
+        console.error('❌ Error skipping workflow step:', error);
+        this.addMessage('assistant', `❌ Error skipping step: ${error.message}`);
+    }
+}
+
+// Cancelar workflow completo
+async cancelWorkflow(sessionId) {
+    if (!confirm('Are you sure you want to cancel the entire workflow? Already executed steps will not be reverted.')) {
+        return;
+    }
+    
+    const reason = prompt('Why do you want to cancel the workflow? (optional)') || '';
+    
+    console.log(`❌ Cancelling workflow ${sessionId}`);
+    
+    try {
+        const response = await fetch(`/api/wp/workflows/sessions/${sessionId}/cancel`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                wordpressUrl: this.currentSite.url,
+                authToken: this.currentSite.token,
+                reason: reason
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.status !== 'success') {
+            throw new Error(data.message || 'Error canceling workflow');
+        }
+        
+        console.log('✅ Workflow cancelado:', data);
+        
+        // Mostrar confirmación de cancelación
+        const cancelMessage = `
+            <div class="workflow-cancelled">
+                <h4>❌ Workflow Cancelado</h4>
+                <p><strong>Workflow:</strong> ${data.workflow_id}</p>
+                ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
+                <p><em>Already executed steps remain completed.</em></p>
+            </div>
+        `;
+        
+        this.addMessage('assistant', cancelMessage);
+        
+        // Deshabilitar todos los botones del workflow
+        const workflowContainer = document.querySelector(`[data-session-id="${sessionId}"]`);
+        if (workflowContainer) {
+            const buttons = workflowContainer.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.disabled = true;
+                button.style.opacity = '0.5';
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ Error canceling workflow:', error);
+        this.addMessage('assistant', `❌ Error canceling workflow: ${error.message}`);
+    }
+}
+
+// Actualizar UI de paso de workflow
+updateWorkflowStepUI(sessionId, stepIndex, status, result) {
+    const stepElement = document.querySelector(`[data-step-index="${stepIndex}"]`);
+    if (!stepElement) return;
+    
+    // Update status class
+    stepElement.className = `workflow-step step-${status}`;
+    
+    // Update status icon
+    const statusElement = stepElement.querySelector('.step-status');
+    if (statusElement) {
+        statusElement.textContent = this.getStepStatusIcon(status);
+    }
+    
+    // Update available actions
+    const actionsElement = stepElement.querySelector('.step-actions');
+    if (actionsElement && (status === 'completed' || status === 'skipped')) {
+        actionsElement.innerHTML = '<span class="step-completed">Step completed</span>';
+    }
+    
+    console.log(`🔄 UI actualizada para paso ${stepIndex}: ${status}`);
+}
+
+// Make functions globally available for onclick handlers
+window.geminiApp = this;
+    // 🔄 WORKFLOW ENGINE: Show workflow suggestions
+    addWorkflowSuggestions(workflowContext) {
+        if (!workflowContext || !workflowContext.has_suggestions || !workflowContext.suggestions.length) {
+            return;
+        }
+        
+        console.log('🔄 Mostrando sugerencias de workflows:', workflowContext.suggestions.length);
+        
+        const workflowsDiv = document.createElement('div');
+        workflowsDiv.className = 'message assistant workflow-suggestions';
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        
+        let workflowsHtml = `
+            <div class="workflow-suggestions-container">
+                <div class="workflow-header">
+                    <div class="workflow-icon">🔄</div>
+                    <div class="workflow-title">Procedimientos Guiados Recomendados</div>
+                    <div class="workflow-count">${workflowContext.suggestions.length} workflow${workflowContext.suggestions.length > 1 ? 's' : ''}</div>
+                </div>
+                
+                <div class="workflow-principle">
+                    <strong>Principle:</strong> "A workflow is not automation. It's an intelligent checklist guided by AI."
+                </div>
+                
+                <div class="workflow-suggestions-list">
+        `;
+        
+        workflowContext.suggestions.forEach((suggestion, index) => {
+            const strengthIcon = this.getWorkflowStrengthIcon(suggestion.recommendation_strength);
+            const strengthColor = this.getWorkflowStrengthColor(suggestion.recommendation_strength);
+            
+            // Generar ID único para el botón
+            const startButtonId = `workflow_start_${suggestion.workflow.id}_${Date.now()}`;
+            
+            workflowsHtml += `
+                <div class="workflow-suggestion-card" data-strength="${suggestion.recommendation_strength}">
+                    <div class="workflow-card-header">
+                        <div class="workflow-strength" style="color: ${strengthColor}">
+                            ${strengthIcon} ${suggestion.recommendation_strength.toUpperCase()}
+                        </div>
+                        <div class="workflow-category">${suggestion.workflow.category}</div>
+                        <div class="workflow-risk" style="color: ${this.getRiskColor(suggestion.workflow.overall_risk_level)}">
+                            ${this.getRiskIcon(suggestion.workflow.overall_risk_level)} ${suggestion.workflow.overall_risk_level}
+                        </div>
+                    </div>
+                    
+                    <div class="workflow-content">
+                        <h4 class="workflow-title">${suggestion.workflow.name}</h4>
+                        <p class="workflow-description">${suggestion.workflow.description}</p>
+                        
+                        <div class="workflow-details">
+                            <div class="workflow-info">
+                                <span class="workflow-info-item">
+                                    <strong>Pasos:</strong> ${suggestion.workflow.steps_count}
+                                </span>
+                                <span class="workflow-info-item">
+                                    <strong>Duración:</strong> ${suggestion.workflow.estimated_duration}
+                                </span>
+                                <span class="workflow-info-item">
+                                    <strong>Riesgo:</strong> ${suggestion.workflow.overall_risk_level}
+                                </span>
+                            </div>
+                            
+                            <div class="workflow-reasons">
+                                <strong>¿Por qué se recomienda?</strong>
+                                <ul>
+                                    ${suggestion.reasons.map(reason => `<li>${reason}</li>`).join('')}
+                                </ul>
+                            </div>
+                            
+                            ${suggestion.workflow.prerequisites && suggestion.workflow.prerequisites.length > 0 ? `
+                            <div class="workflow-prerequisites">
+                                <strong>Prerequisites:</strong>
+                                <ul>
+                                    ${suggestion.workflow.prerequisites.map(prereq => `<li>${this.formatPrerequisite(prereq)}</li>`).join('')}
+                                </ul>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="workflow-actions">
+                        <button id="${startButtonId}" class="workflow-action-button start">
+                            🚀 Iniciar Procedimiento Guiado
+                        </button>
+                    </div>
+                    
+                    <div class="workflow-tags">
+                        ${suggestion.workflow.tags.map(tag => `<span class="workflow-tag">${tag}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+        });
+        
+        workflowsHtml += `
+                </div>
+                
+                <div class="workflow-footer">
+                    <small>🔄 Los workflows te guían paso a paso manteniendo control total sobre cada acción.</small>
+                </div>
+            </div>
+        `;
+        
+        contentDiv.innerHTML = workflowsHtml;
+        workflowsDiv.appendChild(contentDiv);
+        this.chatArea.appendChild(workflowsDiv);
+        
+        // Agregar event listeners para todos los botones
+        workflowContext.suggestions.forEach((suggestion, index) => {
+            const startButtonId = `workflow_start_${suggestion.workflow.id}_${Date.now()}`;
+            const startButton = document.getElementById(startButtonId);
+            
+            if (startButton) {
+                startButton.addEventListener('click', (e) => {
+                    this.startWorkflow(suggestion.workflow, e.target);
+                });
+            }
+        });
+        
+        this.scrollToBottom();
+    }
+    
+    // 🔄 WORKFLOW ENGINE: Obtener icono de fuerza de recomendación
+    getWorkflowStrengthIcon(strength) {
+        const icons = {
+            'high': '🔥',
+            'medium': '⭐',
+            'low': '💡'
+        };
+        return icons[strength] || '📋';
+    }
+    
+    // 🔄 WORKFLOW ENGINE: Obtener color de fuerza de recomendación
+    getWorkflowStrengthColor(strength) {
+        const colors = {
+            'high': '#ff5f56',
+            'medium': '#ffbd2e',
+            'low': '#27ca3f'
+        };
+        return colors[strength] || '#888';
+    }
+    
+    // 🔄 WORKFLOW ENGINE: Formatear prerequisito
+    formatPrerequisite(prereq) {
+        const prereqNames = {
+            'backup_recent': 'Backup reciente (últimos 7 días)',
+            'admin_access': 'Acceso de administrador',
+            'maintenance_window': 'Ventana de mantenimiento'
+        };
+        return prereqNames[prereq] || prereq;
+    }
+    
+    // 🔄 WORKFLOW ENGINE: Iniciar workflow
+    async startWorkflow(workflow, buttonElement) {
+        const originalText = buttonElement.textContent;
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = '<div class="loading"></div> Iniciando...';
+        buttonElement.classList.add('loading-gradient');
+        
+        console.log('🔄 Iniciando workflow:', workflow.id);
+        
+        try {
+            const response = await fetch(`/api/wp/workflows/${workflow.id}/start`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    wordpressUrl: this.currentSite.url,
+                    authToken: this.currentSite.token,
+                    context: {
+                        user_initiated: true,
+                        source: 'workflow_suggestion'
+                    }
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            // Restaurar botón
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalText;
+            buttonElement.classList.remove('loading-gradient');
+            
+            // Mostrar interfaz de workflow
+            this.displayWorkflowInterface(data.session_data);
+            
+            // Mensaje de confirmación
+            const startMessage = `
+                <div class="workflow-started-message">
+                    <h4>🚀 Procedimiento Iniciado</h4>
+                    <p><strong>${workflow.name}</strong> ha sido iniciado exitosamente.</p>
+                    <p>Sesión ID: <code>${data.session_id}</code></p>
+                    <p>Ahora puedes proceder paso a paso con control total sobre cada acción.</p>
+                </div>
+            `;
+            
+            this.addMessage('assistant', startMessage);
+            
+        } catch (error) {
+            console.error('❌ Error iniciando workflow:', error);
+            
+            // Restaurar botón
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalText;
+            buttonElement.classList.remove('loading-gradient');
+            
+            const errorMessage = `
+                <div class="workflow-error-message">
+                    <h4>❌ Error Iniciando Procedimiento</h4>
+                    <p>No se pudo iniciar el workflow <strong>${workflow.name}</strong>.</p>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p>Por favor, verifica tu conexión y vuelve a intentar.</p>
+                </div>
+            `;
+            
+            this.addMessage('assistant', errorMessage);
+        }
+    }
+    
+    // 🔄 WORKFLOW ENGINE: Mostrar interfaz de workflow
+    displayWorkflowInterface(sessionData) {
+        const workflowDiv = document.createElement('div');
+        workflowDiv.className = 'message assistant workflow-interface';
+        workflowDiv.id = `workflow_${sessionData.session_id}`;
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        
+        let interfaceHtml = `
+            <div class="workflow-interface-container">
+                <div class="workflow-interface-header">
+                    <div class="workflow-interface-title">
+                        <h3>🔄 ${sessionData.workflow.name}</h3>
+                        <p>${sessionData.workflow.description}</p>
+                    </div>
+                    <div class="workflow-interface-status">
+                        <span class="workflow-status ${sessionData.status}">${sessionData.status.toUpperCase()}</span>
+                        <span class="workflow-risk ${sessionData.accumulated_risk}">Riesgo: ${sessionData.accumulated_risk.toUpperCase()}</span>
+                    </div>
+                </div>
+                
+                <div class="workflow-progress">
+                    <div class="workflow-progress-bar">
+                        <div class="workflow-progress-fill" style="width: ${sessionData.progress ? sessionData.progress.percentage : 0}%"></div>
+                    </div>
+                    <div class="workflow-progress-text">
+                        Progreso: ${sessionData.progress ? sessionData.progress.completed_steps : 0}/${sessionData.workflow.steps.length} pasos
+                    </div>
+                </div>
+                
+                <div class="workflow-steps-list">
+        `;
+        
+        sessionData.workflow.steps.forEach((step, index) => {
+            const stepStatus = sessionData.steps_status[index];
+            const statusClass = stepStatus.status;
+            const statusIcon = this.getStepStatusIcon(stepStatus);
+            
+            interfaceHtml += `
+                <div class="workflow-step" data-step-index="${index}" data-status="${statusClass}">
+                    <div class="workflow-step-header">
+                        <div class="workflow-step-status">
+                            ${statusIcon} <span class="step-number">${index + 1}</span>
+                        </div>
+                        <div class="workflow-step-title">
+                            <h4>${step.name}</h4>
+                            <p>${step.description}</p>
+                        </div>
+                        <div class="workflow-step-info">
+                            <span class="step-risk ${step.risk_level}">${step.risk_level}</span>
+                            <span class="step-time">${step.estimated_time}</span>
+                            ${step.required ? '<span class="step-required">REQUERIDO</span>' : '<span class="step-optional">OPCIONAL</span>'}
+                        </div>
+                    </div>
+                    
+                    <div class="workflow-step-actions">
+                        <button class="workflow-step-button simulate" data-session="${sessionData.session_id}" data-step="${index}">
+                            🧪 Simulate
+                        </button>
+                        <button class="workflow-step-button execute" data-session="${sessionData.session_id}" data-step="${index}">
+                            ✅ Execute
+                        </button>
+                        <button class="workflow-step-button skip" data-session="${sessionData.session_id}" data-step="${index}">
+                            ⏭️ Saltar
+                        </button>
+                    </div>
+                    
+                    <div class="workflow-step-result" id="step_result_${sessionData.session_id}_${index}">
+                        <!-- Resultados aparecerán aquí -->
+                    </div>
+                </div>
+            `;
+        });
+        
+        interfaceHtml += `
+                </div>
+                
+                <div class="workflow-interface-footer">
+                    <button class="workflow-cancel-button" data-session="${sessionData.session_id}">
+                        ❌ Cancel Procedure
+                    </button>
+                    <div class="workflow-session-info">
+                        <small>Sesión: ${sessionData.session_id} | Iniciado: ${new Date(sessionData.started_at).toLocaleString()}</small>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        contentDiv.innerHTML = interfaceHtml;
+        workflowDiv.appendChild(contentDiv);
+        this.chatArea.appendChild(workflowDiv);
+        
+        // Agregar event listeners para todos los botones de pasos
+        this.attachWorkflowStepListeners(sessionData.session_id);
+        
+        this.scrollToBottom();
+    }
+    
+    // 🔄 WORKFLOW ENGINE: Get step status icon
+    getStepStatusIcon(stepStatus) {
+        const icons = {
+            'pending': '⏳',
+            'simulated': '🧪',
+            'completed': '✅',
+            'skipped': '⏭️',
+            'error': '❌'
+        };
+        return icons[stepStatus.status] || '⏳';
+    }
+    
+    // 🔄 WORKFLOW ENGINE: Adjuntar listeners a botones de pasos
+    attachWorkflowStepListeners(sessionId) {
+        // Botones de simular
+        document.querySelectorAll(`.workflow-step-button.simulate[data-session="${sessionId}"]`).forEach(button => {
+            button.addEventListener('click', (e) => {
+                const stepIndex = parseInt(e.target.dataset.step);
+                this.simulateWorkflowStep(sessionId, stepIndex, e.target);
+            });
+        });
+        
+        // Botones de ejecutar
+        document.querySelectorAll(`.workflow-step-button.execute[data-session="${sessionId}"]`).forEach(button => {
+            button.addEventListener('click', (e) => {
+                const stepIndex = parseInt(e.target.dataset.step);
+                this.executeWorkflowStep(sessionId, stepIndex, e.target);
+            });
+        });
+        
+        // Botones de saltar
+        document.querySelectorAll(`.workflow-step-button.skip[data-session="${sessionId}"]`).forEach(button => {
+            button.addEventListener('click', (e) => {
+                const stepIndex = parseInt(e.target.dataset.step);
+                this.skipWorkflowStep(sessionId, stepIndex, e.target);
+            });
+        });
+        
+        // Botón de cancelar
+        document.querySelectorAll(`.workflow-cancel-button[data-session="${sessionId}"]`).forEach(button => {
+            button.addEventListener('click', (e) => {
+                this.cancelWorkflow(sessionId, e.target);
+            });
+        });
+    }
+    
+    // 🔄 WORKFLOW ENGINE: Simular paso de workflow
+    async simulateWorkflowStep(sessionId, stepIndex, buttonElement) {
+        const originalText = buttonElement.textContent;
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = '<div class="loading"></div> Simulando...';
+        buttonElement.classList.add('loading-gradient');
+        
+        console.log(`🧪 Simulando paso ${stepIndex} de sesión ${sessionId}`);
+        
+        try {
+            const response = await fetch(`/api/wp/workflows/sessions/${sessionId}/steps/${stepIndex}/simulate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    wordpressUrl: this.currentSite.url,
+                    authToken: this.currentSite.token
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            // Restaurar botón
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalText;
+            buttonElement.classList.remove('loading-gradient');
+            
+            // Mostrar resultado de simulación
+            this.displayStepResult(sessionId, stepIndex, data.result, 'simulation');
+            
+            // Update visual step status
+            this.updateStepStatus(sessionId, stepIndex, 'simulated');
+            
+        } catch (error) {
+            console.error('❌ Error simulando paso:', error);
+            
+            // Restaurar botón
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalText;
+            buttonElement.classList.remove('loading-gradient');
+            
+            // Mostrar error
+            this.displayStepResult(sessionId, stepIndex, { error: error.message }, 'error');
+        }
+    }
+    
+    // 🔄 WORKFLOW ENGINE: Ejecutar paso de workflow
+    async executeWorkflowStep(sessionId, stepIndex, buttonElement) {
+        // Confirmar ejecución
+        if (!confirm('¿Estás seguro de que quieres ejecutar este paso? Esta acción realizará cambios reales en tu sitio.')) {
+            return;
+        }
+        
+        const originalText = buttonElement.textContent;
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = '<div class="loading"></div> Ejecutando...';
+        buttonElement.classList.add('loading-gradient');
+        
+        console.log(`⚡ Ejecutando paso ${stepIndex} de sesión ${sessionId}`);
+        
+        try {
+            const response = await fetch(`/api/wp/workflows/sessions/${sessionId}/steps/${stepIndex}/execute`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    wordpressUrl: this.currentSite.url,
+                    authToken: this.currentSite.token
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            // Restaurar botón
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalText;
+            buttonElement.classList.remove('loading-gradient');
+            
+            // Mostrar resultado de ejecución
+            this.displayStepResult(sessionId, stepIndex, data.result, 'execution');
+            
+            // Update visual step status
+            this.updateStepStatus(sessionId, stepIndex, 'completed');
+            
+            // Verificar si el workflow está completo
+            if (data.result.workflow_complete) {
+                this.displayWorkflowCompletion(sessionId);
+            }
+            
+        } catch (error) {
+            console.error('❌ Error ejecutando paso:', error);
+            
+            // Restaurar botón
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalText;
+            buttonElement.classList.remove('loading-gradient');
+            
+            // Mostrar error
+            this.displayStepResult(sessionId, stepIndex, { error: error.message }, 'error');
+            this.updateStepStatus(sessionId, stepIndex, 'error');
+        }
+    }
+    
+    // 🔄 WORKFLOW ENGINE: Saltar paso de workflow
+    async skipWorkflowStep(sessionId, stepIndex, buttonElement) {
+        const reason = prompt('¿Por qué quieres saltar este paso? (opcional)') || '';
+        
+        const originalText = buttonElement.textContent;
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = '<div class="loading"></div> Saltando...';
+        buttonElement.classList.add('loading-gradient');
+        
+        console.log(`⏭️ Saltando paso ${stepIndex} de sesión ${sessionId}`);
+        
+        try {
+            const response = await fetch(`/api/wp/workflows/sessions/${sessionId}/steps/${stepIndex}/skip`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    wordpressUrl: this.currentSite.url,
+                    authToken: this.currentSite.token,
+                    reason: reason
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            // Restaurar botón
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalText;
+            buttonElement.classList.remove('loading-gradient');
+            
+            // Mostrar resultado
+            this.displayStepResult(sessionId, stepIndex, { 
+                message: `Paso saltado${reason ? ': ' + reason : ''}`,
+                skip_reason: reason 
+            }, 'skip');
+            
+            // Update visual step status
+            this.updateStepStatus(sessionId, stepIndex, 'skipped');
+            
+        } catch (error) {
+            console.error('❌ Error saltando paso:', error);
+            
+            // Restaurar botón
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalText;
+            buttonElement.classList.remove('loading-gradient');
+            
+            // Mostrar error
+            this.displayStepResult(sessionId, stepIndex, { error: error.message }, 'error');
+        }
+    }
+    
+    // 🔄 WORKFLOW ENGINE: Cancelar workflow
+    async cancelWorkflow(sessionId, buttonElement) {
+        if (!confirm('¿Estás seguro de que quieres cancelar este procedimiento? Se perderá el progreso actual.')) {
+            return;
+        }
+        
+        const reason = prompt('¿Por qué cancelas el procedimiento? (opcional)') || '';
+        
+        const originalText = buttonElement.textContent;
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = '<div class="loading"></div> Cancelando...';
+        buttonElement.classList.add('loading-gradient');
+        
+        console.log(`❌ Cancelling workflow for session ${sessionId}`);
+        
+        try {
+            const response = await fetch(`/api/wp/workflows/sessions/${sessionId}/cancel`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    wordpressUrl: this.currentSite.url,
+                    authToken: this.currentSite.token,
+                    reason: reason
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            // Deshabilitar toda la interfaz del workflow
+            const workflowInterface = document.getElementById(`workflow_${sessionId}`);
+            if (workflowInterface) {
+                workflowInterface.classList.add('workflow-cancelled');
+                workflowInterface.querySelectorAll('button').forEach(btn => btn.disabled = true);
+            }
+            
+            const cancelMessage = `
+                <div class="workflow-cancelled-message">
+                    <h4>❌ Procedure Cancelled</h4>
+                    <p>The workflow has been cancelled successfully.</p>
+                    ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
+                    <p>You can start a new procedure whenever you want.</p>
+                </div>
+            `;
+            
+            this.addMessage('assistant', cancelMessage);
+            
+        } catch (error) {
+            console.error('❌ Error cancelando workflow:', error);
+            
+            // Restaurar botón
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = originalText;
+            buttonElement.classList.remove('loading-gradient');
+            
+            const errorMessage = `
+                <div class="workflow-error-message">
+                    <h4>❌ Error Cancelando Procedimiento</h4>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                </div>
+            `;
+            
+            this.addMessage('assistant', errorMessage);
+        }
+    }
+    
+    // 🔄 WORKFLOW ENGINE: Mostrar resultado de paso
+    displayStepResult(sessionId, stepIndex, result, type) {
+        const resultContainer = document.getElementById(`step_result_${sessionId}_${stepIndex}`);
+        if (!resultContainer) return;
+        
+        let resultHtml = '';
+        
+        switch (type) {
+            case 'simulation':
+                resultHtml = `
+                    <div class="step-result simulation">
+                        <h5>🧪 Resultado de Simulación</h5>
+                        <div class="result-content">
+                            ${this.formatStepResult(result.simulation_result)}
+                        </div>
+                        <div class="impact-report">
+                            <strong>Impacto Previsto:</strong>
+                            <p>${result.impact_report?.human_explanation?.what_will_happen || 'Cambios según parámetros especificados'}</p>
+                        </div>
+                    </div>
+                `;
+                break;
+                
+            case 'execution':
+                resultHtml = `
+                    <div class="step-result execution">
+                        <h5>✅ Resultado de Ejecución</h5>
+                        <div class="result-content">
+                            ${this.formatStepResult(result.execution_result)}
+                        </div>
+                        <div class="execution-time">
+                            <small>Ejecutado en: ${result.execution_result?.execution_time || 'N/A'}</small>
+                        </div>
+                    </div>
+                `;
+                break;
+                
+            case 'skip':
+                resultHtml = `
+                    <div class="step-result skip">
+                        <h5>⏭️ Paso Saltado</h5>
+                        <p>${result.message}</p>
+                    </div>
+                `;
+                break;
+                
+            case 'error':
+                resultHtml = `
+                    <div class="step-result error">
+                        <h5>❌ Error</h5>
+                        <p>${result.error}</p>
+                    </div>
+                `;
+                break;
+        }
+        
+        resultContainer.innerHTML = resultHtml;
+    }
+    
+    // 🔄 WORKFLOW ENGINE: Formatear resultado de paso
+    formatStepResult(result) {
+        if (!result) return '<p>No result available</p>';
+        
+        if (typeof result === 'string') {
+            return `<p>${result}</p>`;
+        }
+        
+        if (typeof result === 'object') {
+            let html = '';
+            
+            if (result.message) {
+                html += `<p><strong>Mensaje:</strong> ${result.message}</p>`;
+            }
+            
+            if (result.summary) {
+                html += `<p><strong>Resumen:</strong> ${result.summary}</p>`;
+            }
+            
+            if (result.changes_description) {
+                html += `<p><strong>Cambios:</strong> ${result.changes_description}</p>`;
+            }
+            
+            if (result.affected_items) {
+                html += `<p><strong>Elementos afectados:</strong> ${result.affected_items}</p>`;
+            }
+            
+            return html || '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+        }
+        
+        return '<p>' + String(result) + '</p>';
+    }
+    
+    // 🔄 WORKFLOW ENGINE: Update visual step status
+    updateStepStatus(sessionId, stepIndex, status) {
+        const stepElement = document.querySelector(`[data-step-index="${stepIndex}"]`);
+        if (stepElement) {
+            stepElement.dataset.status = status;
+            
+            const statusIcon = stepElement.querySelector('.workflow-step-status');
+            if (statusIcon) {
+                statusIcon.innerHTML = this.getStepStatusIcon({ status }) + ` <span class="step-number">${stepIndex + 1}</span>`;
+            }
+        }
+    }
+    
+    // 🔄 WORKFLOW ENGINE: Mostrar completación de workflow
+    displayWorkflowCompletion(sessionId) {
+        const completionMessage = `
+            <div class="workflow-completion-message">
+                <h3>🎉 Procedure Completed</h3>
+                <p>The workflow has been completed successfully.</p>
+                <p>All required steps have been executed or skipped according to your decisions.</p>
+                <p><strong>Session:</strong> ${sessionId}</p>
+            </div>
+        `;
+        
+        this.addMessage('assistant', completionMessage);
+        
+        // Disable completed workflow buttons
+        const workflowInterface = document.getElementById(`workflow_${sessionId}`);
+        if (workflowInterface) {
+            workflowInterface.classList.add('workflow-completed');
+            workflowInterface.querySelectorAll('.workflow-step-button').forEach(btn => btn.disabled = true);
+        }
+    }
+
+// 📝 CODE SNIPPETS SYSTEM (v0.1) - Extension to GeminiWPCLI class
+
+// Load code snippets from localStorage
+GeminiWPCLI.prototype.loadCodeSnippets = function() {
+    try {
+        const savedSnippets = localStorage.getItem('gemini-wp-cli-snippets');
+        if (savedSnippets) {
+            const snippets = JSON.parse(savedSnippets);
+            console.log('📝 Loaded', snippets.length, 'code snippets');
+            return snippets;
+        }
+    } catch (error) {
+        console.error('❌ Error loading code snippets:', error);
+    }
+    return [];
+};
+
+// Save code snippets to localStorage
+GeminiWPCLI.prototype.saveCodeSnippets = function() {
+    try {
+        localStorage.setItem('gemini-wp-cli-snippets', JSON.stringify(this.codeSnippets));
+        console.log('📝 Saved', this.codeSnippets.length, 'code snippets');
+    } catch (error) {
+        console.error('❌ Error saving code snippets:', error);
+    }
+};
+
+// Add a new code snippet
+GeminiWPCLI.prototype.addCodeSnippet = function(name, type, code, description = '') {
+    const snippet = {
+        id: 'snippet_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+        name: name.trim(),
+        type: type, // 'php', 'css', 'js'
+        code: code.trim(),
+        description: description.trim(),
+        createdAt: new Date().toISOString(),
+        lastUsed: null,
+        useCount: 0
+    };
+
+    this.codeSnippets.push(snippet);
+    this.saveCodeSnippets();
+    
+    // 🧠 Track snippet creation in session memory
+    this.addActionToMemory({
+        type: 'snippet_created',
+        description: `Created ${type.toUpperCase()} snippet: ${name}`,
+        snippet_name: name,
+        snippet_type: type,
+        success: true
+    });
+
+    console.log('📝 Added code snippet:', name, `(${type})`);
+    return snippet;
+};
+
+// Delete a code snippet
+GeminiWPCLI.prototype.deleteCodeSnippet = function(snippetId) {
+    const snippet = this.codeSnippets.find(s => s.id === snippetId);
+    if (snippet) {
+        this.codeSnippets = this.codeSnippets.filter(s => s.id !== snippetId);
+        this.saveCodeSnippets();
+        
+        // 🧠 Track snippet deletion
+        this.addActionToMemory({
+            type: 'snippet_deleted',
+            description: `Deleted ${snippet.type.toUpperCase()} snippet: ${snippet.name}`,
+            snippet_name: snippet.name,
+            snippet_type: snippet.type,
+            success: true
+        });
+
+        console.log('📝 Deleted code snippet:', snippet.name);
+        return true;
+    }
+    return false;
+};
+
+// Use a code snippet (increment usage counter)
+GeminiWPCLI.prototype.useCodeSnippet = function(snippetId) {
+    const snippet = this.codeSnippets.find(s => s.id === snippetId);
+    if (snippet) {
+        snippet.useCount++;
+        snippet.lastUsed = new Date().toISOString();
+        this.saveCodeSnippets();
+        
+        // 🧠 Track snippet usage
+        this.addActionToMemory({
+            type: 'snippet_used',
+            description: `Used ${snippet.type.toUpperCase()} snippet: ${snippet.name}`,
+            snippet_name: snippet.name,
+            snippet_type: snippet.type,
+            success: true
+        });
+
+        console.log('📝 Used code snippet:', snippet.name, `(${snippet.useCount} times)`);
+        return snippet;
+    }
+    return null;
+};
+
+// Get snippets by type
+GeminiWPCLI.prototype.getSnippetsByType = function(type) {
+    return this.codeSnippets.filter(s => s.type === type);
+};
+
+// Search snippets by name or content
+GeminiWPCLI.prototype.searchSnippets = function(query) {
+    const lowerQuery = query.toLowerCase();
+    return this.codeSnippets.filter(snippet => 
+        snippet.name.toLowerCase().includes(lowerQuery) ||
+        snippet.description.toLowerCase().includes(lowerQuery) ||
+        snippet.code.toLowerCase().includes(lowerQuery)
+    );
+};
+
+// Show code snippets modal
+GeminiWPCLI.prototype.showCodeSnippetsModal = function() {
+    const modal = document.getElementById('snippetsModal');
+    if (modal) {
+        this.updateSnippetsDisplay();
+        modal.classList.add('show');
+    }
+};
+
+// Hide code snippets modal
+GeminiWPCLI.prototype.hideCodeSnippetsModal = function() {
+    const modal = document.getElementById('snippetsModal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+};
+
+// Update snippets display in modal
+GeminiWPCLI.prototype.updateSnippetsDisplay = function() {
+    const snippetsList = document.getElementById('snippetsList');
+    if (!snippetsList) return;
+
+    if (this.codeSnippets.length === 0) {
+        snippetsList.innerHTML = `
+            <div class="no-snippets">
+                <p>No code snippets saved yet.</p>
+                <p>Create your first snippet to get started!</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Group snippets by type
+    const snippetsByType = {
+        php: this.getSnippetsByType('php'),
+        css: this.getSnippetsByType('css'),
+        js: this.getSnippetsByType('js')
+    };
+
+    let html = '';
+    
+    Object.entries(snippetsByType).forEach(([type, snippets]) => {
+        if (snippets.length > 0) {
+            const typeIcon = type === 'php' ? '🐘' : type === 'css' ? '🎨' : '⚡';
+            html += `
+                <div class="snippets-section">
+                    <h3 class="snippets-section-title">${typeIcon} ${type.toUpperCase()} Snippets (${snippets.length})</h3>
+                    <div class="snippets-grid">
+            `;
+            
+            snippets.forEach(snippet => {
+                const lastUsed = snippet.lastUsed ? 
+                    new Date(snippet.lastUsed).toLocaleDateString() : 'Never';
+                
+                html += `
+                    <div class="snippet-card" data-snippet-id="${snippet.id}">
+                        <div class="snippet-header">
+                            <div class="snippet-name">${snippet.name}</div>
+                            <div class="snippet-actions">
+                                <button class="snippet-action-btn use-btn" onclick="window.geminiApp.insertSnippetIntoChat('${snippet.id}')">
+                                    Use
+                                </button>
+                                <button class="snippet-action-btn delete-btn" onclick="window.geminiApp.deleteSnippetWithConfirmation('${snippet.id}')">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                        ${snippet.description ? `<div class="snippet-description">${snippet.description}</div>` : ''}
+                        <div class="snippet-code">
+                            <pre><code>${this.escapeHtml(snippet.code)}</code></pre>
+                        </div>
+                        <div class="snippet-meta">
+                            <span>Used ${snippet.useCount} times</span>
+                            <span>Last used: ${lastUsed}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
+        }
+    });
+
+    snippetsList.innerHTML = html;
+};
+
+// Insert snippet into chat input
+GeminiWPCLI.prototype.insertSnippetIntoChat = function(snippetId) {
+    const snippet = this.useCodeSnippet(snippetId);
+    if (snippet) {
+        const messageInput = this.messageInput;
+        const currentValue = messageInput.value;
+        const snippetText = `\n\n// ${snippet.name} (${snippet.type.toUpperCase()})\n${snippet.code}\n`;
+        
+        messageInput.value = currentValue + snippetText;
+        this.autoResizeTextarea();
+        messageInput.focus();
+        
+        this.hideCodeSnippetsModal();
+        
+        // Show confirmation
+        this.addMessage('assistant', 
+            `<strong>📝 Code snippet inserted</strong><br><br>
+            Added "${snippet.name}" (${snippet.type.toUpperCase()}) to your message.<br>
+            <em>Remember: This is for reference only. Execution still requires confirmation.</em>`
+        );
+    }
+};
+
+// Delete snippet with confirmation
+GeminiWPCLI.prototype.deleteSnippetWithConfirmation = function(snippetId) {
+    const snippet = this.codeSnippets.find(s => s.id === snippetId);
+    if (snippet && confirm(`Delete snippet "${snippet.name}"?\n\nThis action cannot be undone.`)) {
+        this.deleteCodeSnippet(snippetId);
+        this.updateSnippetsDisplay();
+        
+        this.addMessage('assistant', 
+            `<strong>📝 Snippet deleted</strong><br><br>
+            Removed "${snippet.name}" (${snippet.type.toUpperCase()}) from your snippets.`
+        );
+    }
+};
+
+// Show create snippet modal
+GeminiWPCLI.prototype.showCreateSnippetModal = function() {
+    const modal = document.getElementById('createSnippetModal');
+    if (modal) {
+        // Clear form
+        document.getElementById('snippetName').value = '';
+        document.getElementById('snippetType').value = 'php';
+        document.getElementById('snippetCode').value = '';
+        document.getElementById('snippetDescription').value = '';
+        
+        modal.classList.add('show');
+        document.getElementById('snippetName').focus();
+    }
+};
+
+// Hide create snippet modal
+GeminiWPCLI.prototype.hideCreateSnippetModal = function() {
+    const modal = document.getElementById('createSnippetModal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+};
+
+// Handle create snippet form submission
+GeminiWPCLI.prototype.handleCreateSnippet = function() {
+    const name = document.getElementById('snippetName').value.trim();
+    const type = document.getElementById('snippetType').value;
+    const code = document.getElementById('snippetCode').value.trim();
+    const description = document.getElementById('snippetDescription').value.trim();
+
+    if (!name) {
+        alert('Please enter a snippet name.');
+        return;
+    }
+
+    if (!code) {
+        alert('Please enter the code content.');
+        return;
+    }
+
+    // Check for duplicate names
+    if (this.codeSnippets.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+        alert('A snippet with this name already exists. Please choose a different name.');
+        return;
+    }
+
+    const snippet = this.addCodeSnippet(name, type, code, description);
+    this.hideCreateSnippetModal();
+    
+    this.addMessage('assistant', 
+        `<strong>📝 Code snippet created</strong><br><br>
+        Created "${snippet.name}" (${snippet.type.toUpperCase()}) snippet.<br>
+        You can now use it in future conversations for reference.`
+    );
+};
+
+// Utility function to escape HTML
+GeminiWPCLI.prototype.escapeHtml = function(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+};
+
+// 📝 Initialize code snippets UI
+GeminiWPCLI.prototype.initializeSnippetsUI = function() {
+    // Add event listener for code snippets button
+    const codeSnippetsButton = document.getElementById('codeSnippetsButton');
+    if (codeSnippetsButton) {
+        codeSnippetsButton.addEventListener('click', () => {
+            console.log('📝 Opening code snippets modal');
+            this.showCodeSnippetsModal();
+        });
+        console.log('📝 Code snippets button initialized');
+    } else {
+        console.error('❌ Code snippets button not found');
+    }
+
+    // Add keyboard shortcuts for snippets
+    document.addEventListener('keydown', (e) => {
+        // Ctrl/Cmd + Shift + S to open snippets
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'S') {
+            e.preventDefault();
+            this.showCodeSnippetsModal();
+        }
+    });
+
+    console.log('📝 Code snippets UI initialized');
+};
