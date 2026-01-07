@@ -8,7 +8,7 @@ require('dotenv').config();
 const { getWpCommand } = require('./gemini-logic.js');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // 🚦 Sistema de límites para usuarios gratuitos (en memoria)
 const rateLimits = new Map(); // IP -> { count: number, resetTime: timestamp }
@@ -255,8 +255,8 @@ app.post('/api/wp/discovery', async (req, res) => {
 
         console.log(`🔍 [${requestId}] Consultando abilities en: ${cleanUrl}`);
 
-        // Llamar al endpoint real del plugin (namespace correcto)
-        const wpResponse = await fetch(`${cleanUrl}/wp-json/gemini-wp-cli/v1/abilities?format=tools`, {
+        // Llamar al endpoint real del plugin (namespace correcto: typingpress/v1)
+        const wpResponse = await fetch(`${cleanUrl}/wp-json/typingpress/v1/discovery?format=tools`, {
             method: 'GET',
             headers: {
                 'X-Gemini-Auth': authToken,
@@ -456,8 +456,8 @@ app.post('/api/wp/execute-ability', async (req, res) => {
         const logPrefix = mode === 'simulate' ? '🧪 [SIMULATE]' : '⚡ [EXECUTE]';
         console.log(`${logPrefix} [${requestId}] ${mode} ability: ${abilityName} en ${cleanUrl}`);
 
-        // Construir URL con parámetro de modo
-        const executeUrl = `${cleanUrl}/wp-json/gemini-wp-cli/v1/abilities/${encodeURIComponent(abilityName)}/execute?mode=${mode}`;
+        // Construir URL con parámetro de modo (namespace correcto: typingpress/v1)
+        const executeUrl = `${cleanUrl}/wp-json/typingpress/v1/abilities/${encodeURIComponent(abilityName)}/execute?mode=${mode}`;
 
         // Llamar al endpoint de ejecución del plugin (namespace correcto)
         const wpResponse = await fetch(executeUrl, {
@@ -1726,7 +1726,7 @@ app.post('/api/wp-cli/check-api', async (req, res) => {
         }
 
         // Verificar si el endpoint específico del plugin existe
-        const pluginResponse = await fetch(`${cleanUrl}/wp-json/gemini/v1/test`, {
+        const pluginResponse = await fetch(`${cleanUrl}/wp-json/typingpress/v1/test`, {
             method: 'GET',
             headers: {
                 'User-Agent': 'Gemini-WP-CLI-Terminal/1.0'
@@ -1742,12 +1742,13 @@ app.post('/api/wp-cli/check-api', async (req, res) => {
             plugin_installed: pluginInstalled,
             plugin_status: pluginResponse.status,
             message: pluginInstalled ? 
-                'Plugin Gemini WP-CLI detectado' : 
-                'Plugin Gemini WP-CLI no encontrado',
+                'Plugin TypingPress detectado' : 
+                'Plugin TypingPress no encontrado',
             endpoints: {
                 api_rest: `${cleanUrl}/wp-json/`,
-                plugin_test: `${cleanUrl}/wp-json/gemini/v1/test`,
-                plugin_execute: `${cleanUrl}/wp-json/gemini/v1/execute`
+                plugin_test: `${cleanUrl}/wp-json/typingpress/v1/test`,
+                plugin_discovery: `${cleanUrl}/wp-json/typingpress/v1/discovery`,
+                plugin_execute: `${cleanUrl}/wp-json/typingpress/v1/abilities/{ability}/execute`
             },
             tested_at: new Date().toISOString()
         });
@@ -1791,7 +1792,7 @@ app.post('/api/wp-cli/test', async (req, res) => {
         // Probar endpoint de test con mejor manejo de errores
         let wpResponse;
         try {
-            wpResponse = await fetch(`${cleanUrl}/wp-json/gemini/v1/test`, {
+            wpResponse = await fetch(`${cleanUrl}/wp-json/typingpress/v1/test`, {
                 method: 'GET',
                 headers: {
                     'X-Gemini-Auth': authToken,
@@ -1811,7 +1812,7 @@ app.post('/api/wp-cli/test', async (req, res) => {
                     '1. Verifica que el sitio esté accesible: ' + cleanUrl,
                     '2. Comprueba que el plugin Gemini WP-CLI esté instalado',
                     '3. Revisa si hay un firewall bloqueando conexiones',
-                    '4. Intenta acceder manualmente a: ' + cleanUrl + '/wp-json/gemini/v1/test'
+                    '4. Intenta acceder manualmente a: ' + cleanUrl + '/wp-json/typingpress/v1/test'
                 ];
             } else if (fetchError.code === 'ENOTFOUND') {
                 errorMessage = 'No se pudo resolver el dominio';
@@ -1827,7 +1828,7 @@ app.post('/api/wp-cli/test', async (req, res) => {
                 error_type: fetchError.code || 'CONNECTION_ERROR',
                 suggestions: suggestions,
                 debug_info: {
-                    target_url: cleanUrl + '/wp-json/gemini/v1/test',
+                    target_url: cleanUrl + '/wp-json/typingpress/v1/test',
                     timeout_used: '15 seconds',
                     original_error: fetchError.message
                 },
@@ -1849,7 +1850,7 @@ app.post('/api/wp-cli/test', async (req, res) => {
             // Detectar diferentes tipos de errores
             if (errorContent.includes('<html') || errorContent.includes('<!DOCTYPE')) {
                 if (wpResponse.status === 404) {
-                    throw new Error(`Plugin no encontrado (404).\n\nEl endpoint /wp-json/gemini/v1/test no existe.\n\nEsto significa que:\n• El plugin Gemini WP-CLI no está instalado\n• El plugin está instalado pero no activo\n• Hay un problema con la API REST de WordPress\n\nSolución:\n1. Instala el plugin desde: ${cleanUrl}/wp-admin/plugin-install.php\n2. O actívalo desde: ${cleanUrl}/wp-admin/plugins.php`);
+                    throw new Error(`Plugin no encontrado (404).\n\nEl endpoint /wp-json/typingpress/v1/test no existe.\n\nEsto significa que:\n• El plugin TypingPress no está instalado\n• El plugin está instalado pero no activo\n• Hay un problema con la API REST de WordPress\n\nSolución:\n1. Instala el plugin desde: ${cleanUrl}/wp-admin/plugin-install.php\n2. O actívalo desde: ${cleanUrl}/wp-admin/plugins.php`);
                 } else if (wpResponse.status === 403) {
                     throw new Error(`Acceso denegado (403).\n\nEl token de autenticación es incorrecto o el plugin no está configurado.\n\nSolución:\n1. Ve a ${cleanUrl}/wp-admin/options-general.php?page=gemini-token\n2. Copia el token correcto\n3. Actualiza la configuración en la webapp`);
                 } else {
@@ -1962,10 +1963,12 @@ app.post('/api/wp-cli/server-info', async (req, res) => {
     }
 });
 
-// 🚀 ENDPOINT: Ejecutar comandos WP-CLI
+// 🚀 ENDPOINT: Ejecutar comandos WP-CLI (DEPRECATED - Use Abilities API instead)
+// ⚠️ DEPRECATED: Este endpoint está deprecado. Usa /api/wp/execute-ability en su lugar.
 app.post('/api/wp-cli/execute', async (req, res) => {
     const requestId = `exec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    console.log(`🚀 [${requestId}] Nueva solicitud de ejecución de comando`);
+    console.warn(`⚠️ [${requestId}] DEPRECATED: /api/wp-cli/execute called. Use /api/wp/execute-ability instead.`);
+    console.log(`🚀 [${requestId}] Nueva solicitud de ejecución de comando (LEGACY MODE)`);
     
     try {
         const { command, wordpressUrl, authToken } = req.body;

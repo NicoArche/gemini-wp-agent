@@ -286,6 +286,11 @@ class GeminiWPCLI {
     }
 
     async performAutodiagnosis() {
+        // Autodiagnosis disabled - not needed with Abilities API
+        console.log('⏭️ Autodiagnosis disabled');
+        return;
+        
+        /* DISABLED CODE - Original autodiagnosis logic
         if (!this.currentSite) {
             console.log('⏭️ Skipping autodiagnosis: no site configured');
             return;
@@ -354,6 +359,7 @@ class GeminiWPCLI {
                 <em>Error: ${error.message}</em>`
             );
         }
+        */
     }
 
     getAvailableFunctions(serverInfo) {
@@ -571,13 +577,13 @@ class GeminiWPCLI {
                 `<strong>🔄 Site connected</strong><br><br>
                 Now connected to: <code>${site.name}</code><br>
                 URL: <span style="color: #00bcd4;">${site.url}</span><br><br>
-                <em>Starting server autodiagnosis...</em>`
+                <em>Ready to use WordPress Abilities API!</em>`
             );
             
-            // Execute autodiagnosis automatically
-            setTimeout(() => {
-                this.performAutodiagnosis();
-            }, 1000);
+            // Autodiagnosis disabled - not needed with Abilities API
+            // setTimeout(() => {
+            //     this.performAutodiagnosis();
+            // }, 1000);
         }
     }
 
@@ -4053,463 +4059,7 @@ How can I help you today?`);
         div.textContent = text;
         return div.innerHTML;
     }
-}
 
-// Inicializar la aplicación cuando se carga la página
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Inicializando Gemini WP-CLI Terminal...');
-    
-    try {
-        window.geminiApp = new GeminiWPCLI();
-        console.log('✅ Aplicación inicializada correctamente');
-    } catch (error) {
-        console.error('❌ Error al inicializar la aplicación:', error);
-        
-        // Mostrar error en la interfaz
-        const chatArea = document.getElementById('chatArea');
-        if (chatArea) {
-            chatArea.innerHTML = `
-                <div class="message assistant">
-                    <div class="message-content">
-                        <div class="error-message">
-                            ❌ Error al inicializar la aplicación: ${error.message}<br><br>
-                            Por favor, recarga la página o revisa la consola del navegador.
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-    }
-});
-
-// Global function to copy code to clipboard
-function copyCodeToClipboard(codeId, button) {
-    const codeElement = document.getElementById(codeId);
-    if (!codeElement) return;
-    
-    // Get code text (without highlight.js HTML)
-    const code = codeElement.textContent || codeElement.innerText;
-    const originalText = button.innerHTML;
-    
-    navigator.clipboard.writeText(code).then(() => {
-        // Change button temporarily
-        button.innerHTML = `
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20,6 9,17 4,12"></polyline>
-            </svg>
-            Copied!
-        `;
-        button.classList.add('copied');
-        
-        // Restore after 2 seconds
-        setTimeout(() => {
-            button.innerHTML = originalText;
-            button.classList.remove('copied');
-        }, 2000);
-    }).catch(err => {
-        console.error('Error copying:', err);
-        // Fallback for older browsers
-        const textArea = document.createElement('textarea');
-        textArea.value = code;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        
-        try {
-            document.execCommand('copy');
-            button.innerHTML = `
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20,6 9,17 4,12"></polyline>
-                </svg>
-                Copied!
-            `;
-            button.classList.add('copied');
-            
-            setTimeout(() => {
-                button.innerHTML = originalText;
-                button.classList.remove('copied');
-            }, 2000);
-        } catch (fallbackErr) {
-            console.error('Error in copy fallback:', fallbackErr);
-        } finally {
-            document.body.removeChild(textArea);
-        }
-    });
-}
-
-// 🧪 Test function to simulate Gemini response with code
-function testGeminiResponseWithCode() {
-    console.log('🧪 STARTING GEMINI RESPONSE WITH CODE TEST');
-    
-    // Simulate different types of responses that Gemini could send
-    const testResponses = [
-        {
-            name: 'Response with normal CSS code',
-            content: `Hello! Of course, I can help you with that.
-
-To make a header fixed in WordPress, you usually need to add custom CSS. Here's the code:
-
-\`\`\`css
-.site-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 999;
-    background: #fff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-body {
-    padding-top: 80px; /* Adjust according to your header height */
-}
-\`\`\`
-
-This code will make your header stay fixed at the top of the page.`
-        },
-        {
-            name: 'Response with problematic Unicode characters',
-            content: `Hello! Of course, I can help you with that.
-
-To make a header fixed in WordPress, you usually need to add custom CSS. Here's the code:
-
-\u2018\u2018\u2018css
-.site-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 999;
-    background: #fff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-body {
-    padding-top: 80px; /* Adjust according to your header height */
-}
-\u2019\u2019\u2019
-
-This code will make your header stay fixed at the top of the page.`
-        }
-    ];
-    
-    testResponses.forEach((testResponse, index) => {
-        console.log(`\n🧪 TEST ${index + 1}: ${testResponse.name}`);
-        console.log('📄 Original content:', testResponse.content);
-        
-        if (window.geminiApp && window.geminiApp.renderMarkdown) {
-            const result = window.geminiApp.renderMarkdown(testResponse.content);
-            console.log('✅ Rendered result:', result);
-            
-            // Add message to interface
-            window.geminiApp.addMessage('assistant', testResponse.content);
-        } else {
-            console.error('❌ window.geminiApp not available');
-        }
-    });
-    
-    console.log('\n🧪 TESTS COMPLETED');
-}
-// 🧪 Specific test function for Gemini format without backticks
-function testGeminiAlternativeFormat() {
-    console.log('🧪 STARTING GEMINI ALTERNATIVE FORMAT TEST');
-    
-    // Simulate the real response you received from Gemini
-    const realGeminiResponse = `Of course! To make a header fixed in WordPress, you generally need to apply some CSS. Here's a basic example you can add to your child theme's \`style.css\` file, or in the WordPress customizer (Appearance > Customize > Additional CSS):
-
-css
-/* For a fixed header at the top */
-.site-header { /* Or your header selector, like #masthead, #header, etc. */
-    position: fixed;
-    top: 0;
-    width: 100%; /* Ensures it takes the full width */
-    background-color: #ffffff; /* A background color so content doesn't show through */
-    z-index: 1000; /* Ensures the header is above other elements */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Optional: a subtle shadow */
-}
-
-/* IMPORTANT: Add padding to body so content doesn't go under the fixed header */
-body {
-    padding-top: 80px; /* Adjust this value according to your header height */
-}
-
-**Explanation:**
-
-1. **\`.site-header\`**: This is an example selector.`;
-    
-    console.log('📄 Test content (real Gemini format):', realGeminiResponse);
-    
-    if (window.geminiApp && window.geminiApp.renderMarkdown) {
-        const result = window.geminiApp.renderMarkdown(realGeminiResponse);
-        console.log('✅ Resultado renderizado:', result);
-        
-        // Añadir el mensaje a la interfaz
-        window.geminiApp.addMessage('assistant', realGeminiResponse);
-    } else {
-        console.error('❌ window.geminiApp not available');
-    }
-    
-    console.log('🧪 PRUEBA DE FORMATO ALTERNATIVO COMPLETADA');
-}
-// 🔄 WORKFLOW ENGINE: Funciones para manejo de workflows
-
-// Simular paso de workflow
-async simulateWorkflowStep(sessionId, stepIndex) {
-    console.log(`🧪 Simulando paso ${stepIndex} de workflow ${sessionId}`);
-    
-    try {
-        const response = await fetch(`/api/wp/workflows/sessions/${sessionId}/steps/${stepIndex}/simulate`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                wordpressUrl: this.currentSite.url,
-                authToken: this.currentSite.token
-            })
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.status !== 'success') {
-            throw new Error(data.message || 'Error simulating step');
-        }
-        
-        console.log('✅ Simulación de paso completada:', data);
-        
-        // Actualizar UI del paso
-        this.updateWorkflowStepUI(sessionId, stepIndex, 'simulated', data.result);
-        
-        // Mostrar resultado de simulación
-        const simulationMessage = `
-            <div class="workflow-step-simulation">
-                <h4>🧪 Simulación del Paso ${stepIndex + 1}</h4>
-                <p><strong>Resultado:</strong> ${data.result.simulation_result?.message || 'Simulación completada'}</p>
-                ${data.result.impact_report ? `
-                <div class="simulation-impact">
-                    <strong>Impact:</strong> ${data.result.impact_report.human_explanation?.what_will_happen || 'See technical details'}
-                </div>
-                ` : ''}
-                <small>💡 Esta fue una simulación - no se realizaron cambios reales.</small>
-            </div>
-        `;
-        
-        this.addMessage('assistant', simulationMessage);
-        
-    } catch (error) {
-        console.error('❌ Error simulating workflow step:', error);
-        this.addMessage('assistant', `❌ Error simulating step: ${error.message}`);
-    }
-}
-
-// Ejecutar paso de workflow
-async executeWorkflowStep(sessionId, stepIndex) {
-    console.log(`⚡ Ejecutando paso ${stepIndex} de workflow ${sessionId}`);
-    
-    // Pedir confirmación antes de ejecutar
-    if (!confirm('¿Estás seguro de que quieres ejecutar este paso? Esta acción realizará cambios reales en tu sitio.')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/api/wp/workflows/sessions/${sessionId}/steps/${stepIndex}/execute`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                wordpressUrl: this.currentSite.url,
-                authToken: this.currentSite.token
-            })
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.status !== 'success') {
-            throw new Error(data.message || 'Error executing step');
-        }
-        
-        console.log('✅ Ejecución de paso completada:', data);
-        
-        // Actualizar UI del paso
-        this.updateWorkflowStepUI(sessionId, stepIndex, 'completed', data.result);
-        
-        // Mostrar resultado de ejecución
-        const executionMessage = `
-            <div class="workflow-step-execution">
-                <h4>✅ Step ${stepIndex + 1} Executed</h4>
-                <p><strong>Result:</strong> ${data.result.execution_result?.message || 'Step completed successfully'}</p>
-                ${data.result.workflow_complete ? `
-                <div class="workflow-complete">
-                    <strong>🎉 Workflow completed!</strong>
-                    <p>All required steps have been executed successfully.</p>
-                </div>
-                ` : ''}
-            </div>
-        `;
-        
-        this.addMessage('assistant', executionMessage);
-        
-    } catch (error) {
-        console.error('❌ Error executing workflow step:', error);
-        this.addMessage('assistant', `❌ Error executing step: ${error.message}`);
-    }
-}
-
-// Saltar paso de workflow
-async skipWorkflowStep(sessionId, stepIndex) {
-    const reason = prompt('¿Por qué quieres saltar este paso? (opcional)') || '';
-    
-    console.log(`⏭️ Saltando paso ${stepIndex} de workflow ${sessionId}`);
-    
-    try {
-        const response = await fetch(`/api/wp/workflows/sessions/${sessionId}/steps/${stepIndex}/skip`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                wordpressUrl: this.currentSite.url,
-                authToken: this.currentSite.token,
-                reason: reason
-            })
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.status !== 'success') {
-            throw new Error(data.message || 'Error skipping step');
-        }
-        
-        console.log('✅ Paso saltado:', data);
-        
-        // Actualizar UI del paso
-        this.updateWorkflowStepUI(sessionId, stepIndex, 'skipped', data.result);
-        
-        // Mostrar confirmación
-        const skipMessage = `
-            <div class="workflow-step-skip">
-                <h4>⏭️ Step ${stepIndex + 1} Skipped</h4>
-                ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
-                <small>This step was omitted and will not be executed.</small>
-            </div>
-        `;
-        
-        this.addMessage('assistant', skipMessage);
-        
-    } catch (error) {
-        console.error('❌ Error skipping workflow step:', error);
-        this.addMessage('assistant', `❌ Error skipping step: ${error.message}`);
-    }
-}
-
-// Cancelar workflow completo
-async cancelWorkflow(sessionId) {
-    if (!confirm('Are you sure you want to cancel the entire workflow? Already executed steps will not be reverted.')) {
-        return;
-    }
-    
-    const reason = prompt('Why do you want to cancel the workflow? (optional)') || '';
-    
-    console.log(`❌ Cancelling workflow ${sessionId}`);
-    
-    try {
-        const response = await fetch(`/api/wp/workflows/sessions/${sessionId}/cancel`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                wordpressUrl: this.currentSite.url,
-                authToken: this.currentSite.token,
-                reason: reason
-            })
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.status !== 'success') {
-            throw new Error(data.message || 'Error canceling workflow');
-        }
-        
-        console.log('✅ Workflow cancelado:', data);
-        
-        // Mostrar confirmación de cancelación
-        const cancelMessage = `
-            <div class="workflow-cancelled">
-                <h4>❌ Workflow Cancelado</h4>
-                <p><strong>Workflow:</strong> ${data.workflow_id}</p>
-                ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
-                <p><em>Already executed steps remain completed.</em></p>
-            </div>
-        `;
-        
-        this.addMessage('assistant', cancelMessage);
-        
-        // Deshabilitar todos los botones del workflow
-        const workflowContainer = document.querySelector(`[data-session-id="${sessionId}"]`);
-        if (workflowContainer) {
-            const buttons = workflowContainer.querySelectorAll('button');
-            buttons.forEach(button => {
-                button.disabled = true;
-                button.style.opacity = '0.5';
-            });
-        }
-        
-    } catch (error) {
-        console.error('❌ Error canceling workflow:', error);
-        this.addMessage('assistant', `❌ Error canceling workflow: ${error.message}`);
-    }
-}
-
-// Actualizar UI de paso de workflow
-updateWorkflowStepUI(sessionId, stepIndex, status, result) {
-    const stepElement = document.querySelector(`[data-step-index="${stepIndex}"]`);
-    if (!stepElement) return;
-    
-    // Update status class
-    stepElement.className = `workflow-step step-${status}`;
-    
-    // Update status icon
-    const statusElement = stepElement.querySelector('.step-status');
-    if (statusElement) {
-        statusElement.textContent = this.getStepStatusIcon(status);
-    }
-    
-    // Update available actions
-    const actionsElement = stepElement.querySelector('.step-actions');
-    if (actionsElement && (status === 'completed' || status === 'skipped')) {
-        actionsElement.innerHTML = '<span class="step-completed">Step completed</span>';
-    }
-    
-    console.log(`🔄 UI actualizada para paso ${stepIndex}: ${status}`);
-}
-
-// Make functions globally available for onclick handlers
-window.geminiApp = this;
     // 🔄 WORKFLOW ENGINE: Show workflow suggestions
     addWorkflowSuggestions(workflowContext) {
         if (!workflowContext || !workflowContext.has_suggestions || !workflowContext.suggestions.length) {
@@ -5252,6 +4802,207 @@ window.geminiApp = this;
             workflowInterface.querySelectorAll('.workflow-step-button').forEach(btn => btn.disabled = true);
         }
     }
+}
+
+// Inicializar la aplicación cuando se carga la página
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 Inicializando Gemini WP-CLI Terminal...');
+    
+    try {
+        window.geminiApp = new GeminiWPCLI();
+        console.log('✅ Aplicación inicializada correctamente');
+    } catch (error) {
+        console.error('❌ Error al inicializar la aplicación:', error);
+        
+        // Mostrar error en la interfaz
+        const chatArea = document.getElementById('chatArea');
+        if (chatArea) {
+            chatArea.innerHTML = `
+                <div class="message assistant">
+                    <div class="message-content">
+                        <div class="error-message">
+                            ❌ Error al inicializar la aplicación: ${error.message}<br><br>
+                            Por favor, recarga la página o revisa la consola del navegador.
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+});
+
+// Global function to copy code to clipboard
+function copyCodeToClipboard(codeId, button) {
+    const codeElement = document.getElementById(codeId);
+    if (!codeElement) return;
+    
+    // Get code text (without highlight.js HTML)
+    const code = codeElement.textContent || codeElement.innerText;
+    const originalText = button.innerHTML;
+    
+    navigator.clipboard.writeText(code).then(() => {
+        // Change button temporarily
+        button.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20,6 9,17 4,12"></polyline>
+            </svg>
+            Copied!
+        `;
+        button.classList.add('copied');
+        
+        // Restore after 2 seconds
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.classList.remove('copied');
+        }, 2000);
+    }).catch(err => {
+        console.error('Error copying:', err);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = code;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+            document.execCommand('copy');
+            button.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20,6 9,17 4,12"></polyline>
+                </svg>
+                Copied!
+            `;
+            button.classList.add('copied');
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.classList.remove('copied');
+            }, 2000);
+        } catch (fallbackErr) {
+            console.error('Error in copy fallback:', fallbackErr);
+        } finally {
+            document.body.removeChild(textArea);
+        }
+    });
+}
+
+// 🧪 Test function to simulate Gemini response with code
+function testGeminiResponseWithCode() {
+    console.log('🧪 STARTING GEMINI RESPONSE WITH CODE TEST');
+    
+    // Simulate different types of responses that Gemini could send
+    const testResponses = [
+        {
+            name: 'Response with normal CSS code',
+            content: `Hello! Of course, I can help you with that.
+
+To make a header fixed in WordPress, you usually need to add custom CSS. Here's the code:
+
+\`\`\`css
+.site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 999;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+body {
+    padding-top: 80px; /* Adjust according to your header height */
+}
+\`\`\`
+
+This code will make your header stay fixed at the top of the page.`
+        },
+        {
+            name: 'Response with problematic Unicode characters',
+            content: `Hello! Of course, I can help you with that.
+
+To make a header fixed in WordPress, you usually need to add custom CSS. Here's the code:
+
+\u2018\u2018\u2018css
+.site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 999;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+body {
+    padding-top: 80px; /* Adjust according to your header height */
+}
+\u2019\u2019\u2019
+
+This code will make your header stay fixed at the top of the page.`
+        }
+    ];
+    
+    testResponses.forEach((testResponse, index) => {
+        console.log(`\n🧪 TEST ${index + 1}: ${testResponse.name}`);
+        console.log('📄 Original content:', testResponse.content);
+        
+        if (window.geminiApp && window.geminiApp.renderMarkdown) {
+            const result = window.geminiApp.renderMarkdown(testResponse.content);
+            console.log('✅ Rendered result:', result);
+            
+            // Add message to interface
+            window.geminiApp.addMessage('assistant', testResponse.content);
+        } else {
+            console.error('❌ window.geminiApp not available');
+        }
+    });
+    
+    console.log('\n🧪 TESTS COMPLETED');
+}
+// 🧪 Specific test function for Gemini format without backticks
+function testGeminiAlternativeFormat() {
+    console.log('🧪 STARTING GEMINI ALTERNATIVE FORMAT TEST');
+    
+    // Simulate the real response you received from Gemini
+    const realGeminiResponse = `Of course! To make a header fixed in WordPress, you generally need to apply some CSS. Here's a basic example you can add to your child theme's \`style.css\` file, or in the WordPress customizer (Appearance > Customize > Additional CSS):
+
+css
+/* For a fixed header at the top */
+.site-header { /* Or your header selector, like #masthead, #header, etc. */
+    position: fixed;
+    top: 0;
+    width: 100%; /* Ensures it takes the full width */
+    background-color: #ffffff; /* A background color so content doesn't show through */
+    z-index: 1000; /* Ensures the header is above other elements */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Optional: a subtle shadow */
+}
+
+/* IMPORTANT: Add padding to body so content doesn't go under the fixed header */
+body {
+    padding-top: 80px; /* Adjust this value according to your header height */
+}
+
+**Explanation:**
+
+1. **\`.site-header\`**: This is an example selector.`;
+    
+    console.log('📄 Test content (real Gemini format):', realGeminiResponse);
+    
+    if (window.geminiApp && window.geminiApp.renderMarkdown) {
+        const result = window.geminiApp.renderMarkdown(realGeminiResponse);
+        console.log('✅ Resultado renderizado:', result);
+        
+        // Añadir el mensaje a la interfaz
+        window.geminiApp.addMessage('assistant', realGeminiResponse);
+    } else {
+        console.error('❌ window.geminiApp not available');
+    }
+    
+    console.log('🧪 PRUEBA DE FORMATO ALTERNATIVO COMPLETADA');
+}
 
 // 📝 CODE SNIPPETS SYSTEM (v0.1) - Extension to GeminiWPCLI class
 
